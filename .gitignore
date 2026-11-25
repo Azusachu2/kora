@@ -9,6 +9,8 @@ venv/
 
 # 环境变量（含敏感信息）
 .env
+.env.*
+!.env.example
 
 # 数据目录
 data/
@@ -24,9 +26,6 @@ logs/
 .DS_Store
 Thumbs.db
 
-# Docker 构建产物
-build-image*.sh
-
 # ChromaDB 本地数据
 *.sqlite3
 
@@ -34,3 +33,8 @@ build-image*.sh
 *~
 *.bak
 docker-compose(1).yml
+
+# 测试缓存与模型文件
+.pytest_cache/
+*.onnx
+*.part
