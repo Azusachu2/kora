@@ -637,10 +637,33 @@ class EscalationAgent(BaseAgent):
     )
     system_prompt = "你负责客服人工升级交接，不要继续模拟已完成的后台操作。"
 
+    # 紧急升级时的安全提示。人身安全一条始终给出：意图可能判错，不能因此漏掉。
+    _SAFETY_TIP = (
+        "如果有人受伤、身体不适，或有起火、冒烟等危险，请先远离危险，"
+        "并拨打当地急救电话（中国大陆：急救 120、火警 119、报警 110）。"
+    )
+    _FUNDS_TIP = (
+        "如果资金或账户正在被盗用，请马上联系银行或支付平台冻结，"
+        "修改登录和支付密码，保留交易记录，必要时报警。"
+    )
+    _OUTAGE_TIP = "如果是服务故障或数据丢失，请先停止可能覆盖数据的操作，记下开始时间、影响范围和错误提示。"
+
     def get_tools(self) -> Dict[str, AgentToolSpec]:
         tools = super().get_tools()
         tools.update(escalation_tools())
         return tools
+
+    def _safety_notice(self, req: Request) -> str:
+        """只在紧急时给出；转人工等普通升级不提示。"""
+        if req.urgency != UrgencyLevel.CRITICAL:
+            return ""
+        group = IntentRecognizer._intent_group(req.intent) if req.intent else ""
+        tips = [self._SAFETY_TIP]
+        if group in ("billing", "account"):
+            tips.append(self._FUNDS_TIP)
+        elif group == "technical":
+            tips.append(self._OUTAGE_TIP)
+        return "请先确保安全：\n" + "\n".join(f"- {tip}" for tip in tips) + "\n\n"
 
     async def handle(self, req: Request) -> AgentResponse:
         t0 = time.monotonic()
@@ -649,7 +672,8 @@ class EscalationAgent(BaseAgent):
         urgency = req.urgency.name if req.urgency else "UNKNOWN"
         entities = json.dumps(req.entities or {}, ensure_ascii=False)
         content = (
-            "这个问题需要人工升级处理，以下信息可交给人工客服继续核验。\n\n"
+            self._safety_notice(req)
+            + "这个问题需要人工升级处理，以下信息可交给人工客服继续核验。\n\n"
             f"升级原因：意图={intent}，紧急度={urgency}\n"
             f"已记录信息：{entities}\n"
             "目前系统尚未接入人工工单队列，请通过现有客服渠道联系人工。"
@@ -1112,7 +1136,8 @@ class AgentOrchestrator:
         ):
             scores[AgentType.BILLING] += 0.75
 
-        technical_kws = ["崩溃", "报错", "error", "crash", "无法登录", "登录失败", "500", "401", "验证码"]
+        # 错误码只认实体提取结果，避免 "500元"、订单号里的 "401" 触发技术 Agent。
+        technical_kws = ["崩溃", "报错", "error", "crash", "无法登录", "登录失败", "验证码"]
         billing_kws = ["退款", "退货", "扣款", "发票", "账单", "支付", "订阅", "refund", "invoice", "多扣"]
         general_kws = ["订单", "物流", "快递", "配送", "会员", "积分", "咨询", "帮助"]
 
@@ -1162,14 +1187,14 @@ class AgentOrchestrator:
         msg = req.message.lower()
         targets: List[AgentType] = []
 
-        technical_kws = ["崩溃", "报错", "error", "crash", "无法登录", "登录失败", "500", "401"]
+        technical_kws = ["崩溃", "报错", "error", "crash", "无法登录", "登录失败"]
         billing_kws = ["退款", "扣款", "发票", "账单", "支付", "订阅", "refund", "invoice"]
 
         if req.intent in (
             IntentCategory.TECHNICAL,
             IntentCategory.TECHNICAL_LOGIN,
             IntentCategory.TECHNICAL_CRASH,
-        ) or any(kw in msg for kw in technical_kws):
+        ) or (req.entities or {}).get("error_code") or any(kw in msg for kw in technical_kws):
             targets.append(AgentType.TECHNICAL)
         if req.intent in (
             IntentCategory.BILLING,
@@ -1187,8 +1212,8 @@ class AgentOrchestrator:
 
     @staticmethod
     def _needs_clarification(req: Request) -> bool:
-        """低置信度且无明确意图时，先追问，避免误路由。"""
-        if req.intent != IntentCategory.OTHER:
+        """低置信度且无明确意图时，先追问，避免误路由。紧急情况不追问，直接升级。"""
+        if req.intent != IntentCategory.OTHER or req.urgency == UrgencyLevel.CRITICAL:
             return False
         text = (req.message or "").strip()
         if len(text) <= 2:

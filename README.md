@@ -188,8 +188,13 @@ docker compose --env-file ../Kora/.env up -d --build
 | `CHROMA_HOST` / `CHROMA_PORT` | Docker 使用 `chromadb:8000`；宿主机开发使用 `localhost:8001`。 |
 | `CHROMA_PERSIST_DIRECTORY` | development 无法连接远端 ChromaDB 时的本地存储路径；容器内为 `/app/data/chroma`。production 连接失败时中止启动。 |
 | `KORA_SEED_DEMO_DOCS` | development 空库是否自动导入示例政策，默认 `true`；production 始终禁止自动导入。 |
+| `KORA_INTENT_MAX_TOKENS` / `KORA_INTENT_EFFORT` | 意图识别的输出上限（默认 1024）和思考强度（默认 `low`）。思考与正文共用输出上限，过小会截断；effort 仅对支持的 Claude 模型生效。 |
 | `KORA_INTENT_TIMEOUT_S` / `KORA_LLM_TIMEOUT_S` / `KORA_COMPOSER_TIMEOUT_S` | 意图识别、Agent 每次模型请求和汇总模型请求的超时，默认 8 / 15 / 8 秒；均受聊天 50 秒总预算限制。 |
 | `PROFILE_UPDATE_MIN_INTERVAL_S` | 普通后台画像最短更新间隔，默认 60 秒；明确表达偏好时立即更新。设为 0 恢复逐轮更新。会话消息和业务字段仍每轮保存。 |
+| `KORA_EMBEDDING_PROVIDER` / `KORA_EMBEDDING_DIR` / `KORA_EMBEDDING_THREADS` | 本地向量模型：`bge-m3`（默认）或 `chroma`；模型目录；计算线程数，默认 2。 |
+| `KORA_EMBEDDING_DOWNLOAD` | 缺少模型文件时是否自动下载，development 默认 `true`，production 默认 `false`。 |
+| `KORA_KB_MIN_SCORE` | 知识库片段的最低余弦相似度，默认 0.40，仅 bge-m3 生效；调高会误伤英文提问。 |
+| `KORA_RAG_REWRITE` / `KORA_RAG_RERANK` | 是否启用查询改写和 LLM 重排，默认均为 `false`，各增加一次模型调用。 |
 | `LOG_LEVEL` | 日志级别，默认 `INFO`。 |
 | `INTENT_EMBEDDING_ENABLED` | 是否执行向量分支，默认 `true`；设为 `false` 后仅融合 LLM 和规则。 |
 | `INTENT_EMBEDDING_PROVIDER` | `auto`、`local` 或 `siliconflow`，默认 `auto`，见下一节。 |
@@ -231,10 +236,14 @@ docker compose --env-file ../Kora/.env up -d --build --force-recreate kora-pytho
 
 | 用途 | 模型与存储 |
 |---|---|
-| 三路意图识别中的向量匹配 | 默认本地字符 n-gram，可配置硅基流动 `BAAI/bge-m3`。 |
-| RAG 知识库及 ChromaDB 记忆检索 | 使用 ChromaDB 默认的本地 `all-MiniLM-L6-v2` 向量模型。 |
+| 三路意图识别中的向量匹配 | 默认本地 `bge-m3`，可配置硅基流动 `BAAI/bge-m3`；本地模型未加载时退到字符 n-gram。 |
+| RAG 知识库及 ChromaDB 记忆检索 | 本地多语言模型 `bge-m3`（int8 ONNX），中英文可以互相检索，不联网。 |
 
-本节只配置**意图识别的向量分支**，不会替换 RAG 模型，也不需要重建知识库。硅基流动的免费模型范围、账号权限和限流以[官方价格页](https://siliconflow.cn/pricing)为准；项目固定使用非 Pro 的 `BAAI/bge-m3`，不会自动切换到 `Pro/BAAI/bge-m3`。聊天及评测的 LLM 费用由对应服务商计算。
+**本地模型**由 `core/embedding.py` 加载，约占 1GB 内存，单条约 20–40 毫秒。Docker 镜像已内置；本地运行首次启动会下载约 570MB 并校验，也可提前执行 `python core/embedding.py`，访问 HuggingFace 困难时设置 `HF_ENDPOINT=https://hf-mirror.com`。生产环境缺少模型文件会中止启动，不会静默换成旧模型。
+
+换模型等于换向量空间：新向量写入 `knowledge_base.bge-m3-int8` 这类带模型名的集合，首次启动自动从旧集合迁移一次（每百条约十几秒），旧集合保留。需要退回时设置 `KORA_EMBEDDING_PROVIDER=chroma`；退回期间写入的内容不会自动同步到新集合。
+
+以下步骤只配置**意图识别的在线向量**，不影响 RAG。硅基流动的免费模型范围、账号权限和限流以[官方价格页](https://siliconflow.cn/pricing)为准；项目固定使用非 Pro 的 `BAAI/bge-m3`，不会自动切换到 `Pro/BAAI/bge-m3`。聊天及评测的 LLM 费用由对应服务商计算。
 
 ### 1. 申请 Key 并填写配置
 
@@ -250,8 +259,8 @@ SILICONFLOW_API_KEY=替换为你自己的硅基流动Key
 
 | 模式 | 行为 |
 |---|---|
-| `auto` | 有 Key 时尝试在线匹配，无 Key 时使用本地 n-gram。 |
-| `local` | 始终使用本地 n-gram。 |
+| `auto` | 有 Key 时尝试在线匹配，无 Key 时使用本地向量。 |
+| `local` | 始终使用本地向量。 |
 | `siliconflow` | 指定在线提供方；缺少 Key 或调用失败时仍会本地降级。 |
 
 地址固定为 `https://api.siliconflow.cn/v1/embeddings`，接口格式见[官方 Embedding 文档](https://api-docs.siliconflow.cn/docs/api/embeddings-post)。硅基流动 Key、聊天模型 Key、Kora API 访问 Token 是三种不同凭据，不能互换。
@@ -303,7 +312,8 @@ docker compose exec -T kora python scripts/check_embedding.py
 接着通过 `/chat` 发送一条新问题，例如“登录时提示 401，应该怎么处理？”，查看响应里的 `intent_embedding_source`：
 
 - `siliconflow/BAAI/bge-m3`：本次匹配实际使用了在线向量。
-- `local-ngram`：本次使用本地向量，可能是未配置、主动关闭或调用失败后降级。
+- `local-bge-m3-int8`：本次使用本地模型，可能是未配置、主动关闭在线或调用失败后降级。
+- `local-ngram`：本地模型也不可用，使用字符 n-gram。
 - `disabled`：`INTENT_EMBEDDING_ENABLED=false`，没有执行向量分支；使用 LLM 0.85、规则 0.15 的权重。`provider=local` 仍执行向量分支，使用默认三路权重。
 - `unavailable`：向量分支异常，未得到匹配结果。
 
@@ -341,13 +351,15 @@ docker compose exec -T kora python scripts/check_embedding.py
 | `intent_confidence`、`intent_source_scores` | 排查三路识别结果。 |
 | `primary_agent`、`supporting_agents`、`routing_reason` | 了解主辅 Agent 的选择和路由依据。 |
 | `tools_used`、`knowledge_used` | 查看工具使用情况；后者仅在知识库工具实际成功时为 true。 |
-| `intent_embedding_source` | 确认本次向量分支使用在线模型还是本地 n-gram。 |
+| `intent_embedding_source` | 确认本次向量分支使用在线模型、本地模型还是 n-gram。 |
 | `performance` | 本轮记忆读取、意图和 Agent 执行耗时，以及模型逻辑调用数、供应商返回的 token 用量和检索缓存事件；不包含问题正文。 |
 | `status` | `success` 为完整回复，`partial` 表示回复截断或仅部分 Agent 成功，`failed` 为执行失败。 |
 | `retryable`、`error_code` | 执行失败返回 HTTP 503；仅 `retryable=true` 时可以复用请求 ID 重新执行。 |
 | `latency_ms` | 从进入聊天处理、等待会话锁到生成回复的耗时；完整 HTTP 耗时（含存储提交）见 `Server-Timing` 响应头。 |
 
-检索会缓存“查询改写 → 召回 → 重排”的完整结果，并合并并发的相同检索。缓存按查询、Top-K、工具版本和传入的用户上下文隔离，沿用工具的 TTL；知识库更新会使线上及评测缓存失效。工具 TTL 为 0 时关闭完整流程缓存和并发合并，失败检索不缓存。`/search` 和知识库工具结果的 `cached` 表示完整流程命中，此时不再请求改写或重排模型。
+检索默认只做向量召回，不调用模型；`KORA_RAG_REWRITE` 和 `KORA_RAG_RERANK` 可分别打开查询改写和 LLM 重排。低于 `KORA_KB_MIN_SCORE` 的片段不返回，没有相关资料时返回成功和空结果，由 Agent 如实说明。
+
+检索会缓存完整流程的结果，并合并并发的相同检索。缓存按查询、Top-K、工具版本和传入的用户上下文隔离，沿用工具的 TTL；知识库更新会使线上及评测缓存失效。工具 TTL 为 0 时关闭完整流程缓存和并发合并，失败检索不缓存。`/search` 和知识库工具结果的 `cached` 表示完整流程命中，此时不再请求改写或重排模型。
 
 默认回复提示约 200–400 个中文字符，多角色汇总约 300–500 个字符，保留必要依据、核验条件和下一步；用户明确要求详细说明时允许展开。这是生成时的篇幅指导，不是返回后裁剪，实际达到模型输出上限时仍返回 `partial`。结构化实体优先随角色输入包提供，避免在同一次模型请求中重复发送。
 
@@ -528,6 +540,32 @@ queued -> running -> completed
 
 评测 Agent 不获得可能修改数据的工具。生产部署的知识库和记忆服务连接失败时中止启动；新空库需要管理员导入实际业务文档。
 
+### 基准评测
+
+`/eval/run` 的内置用例较少，适合快速检查；比较改动效果请用固定数据集的命令行评测。数据集、标注约定和全部参数见 `evaluation/benchmark.py` 开头。
+
+| 数据集 | 内容 |
+|---|---|
+| `evaluation/datasets/intent.jsonl` | 253 条：意图、可接受的 Agent 组合、实体和是否真实紧急；含多轮、复合、错别字、英文、否定和误触用例，与 Few-shot 模板不重叠。 |
+| `evaluation/datasets/retrieval.jsonl` | 93 条查询，其中 12 条知识库没有答案；语料 41 篇，在 `retrieval_corpus.jsonl`。 |
+| `evaluation/datasets/retrieval_en.jsonl` | 64 条英文查询，与中文查询对应，检索同一份中文语料。 |
+
+```bash
+# 不调用模型，免费：意图降级路径、实体、紧急度、路由；知识库向量检索
+python -m evaluation.benchmark intent --compare evaluation/baselines/intent-offline.json
+python -m evaluation.benchmark retrieval --compare evaluation/baselines/retrieval-vector.json
+python -m evaluation.benchmark retrieval --lang en --compare evaluation/baselines/retrieval-vector-en.json
+
+# 调用 .env 中的模型，产生费用；先用 --limit 试跑
+python -m evaluation.benchmark intent --mode live --limit 19
+python -m evaluation.benchmark retrieval --mode live --limit 10
+python -m evaluation.benchmark e2e --limit 10
+```
+
+`--compare` 逐用例配对，列出修好和弄坏的用例及 p 值；数据集变化后拒绝比较。报告 `status=partial` 表示包含接口失败、超时或实际响应模型不符，不应作为基线。调优时使用 `--split dev`，最后用 `--split test` 报告结果。检索评测在临时目录建库，不读写真实知识库。
+
+数据为合成用例，反映覆盖面而不是线上流量分布；上线后应逐步补充脱敏的真实问题。
+
 ### 在线监控与调用轨迹
 
 | 接口 | 用途 |
@@ -684,7 +722,8 @@ api/main.py                    HTTP API、应用初始化、CLI 入口
 agents/agent_orchestrator.py    Agent 执行、主辅路由和回复合成
 agents/tools.py                Agent 工具封装
 core/intent_recognizer.py      三路意图识别与领域融合
-core/intent_embedding.py       在线向量、本地降级与模板缓存
+core/embedding.py              本地多语言向量模型、集合包装与迁移
+core/intent_embedding.py       意图向量：在线、本地模型与 n-gram 降级
 core/skill_loader.py           Skills 加载和匹配
 core/access.py                 API 身份与角色校验
 memory/conversation_memory.py  Redis / ChromaDB 分层记忆
@@ -694,6 +733,9 @@ tooling/                       工具执行与标准 MCP
   mcp_client.py                外部 MCP 客户端
 monitor/performance_monitor.py 运行统计与 Prometheus 指标
 evaluation/evaluator.py        意图评测、Judge 与回归基线
+evaluation/benchmark.py        固定数据集的意图、路由、检索和耗时评测
+evaluation/datasets/           基准数据集
+evaluation/baselines/          离线基线报告
 evaluation/few_shot.py         Judge 评分校准示例
 evaluation/jobs.py             异步评测任务队列
 config/                        MCP、Nginx、Prometheus 配置

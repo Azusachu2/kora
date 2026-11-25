@@ -1,4 +1,4 @@
-"""意图匹配专用免费 BGE-M3 客户端；整次匹配在同一向量空间内完成。"""
+"""意图匹配向量：在线 BGE-M3 → 本地 bge-m3 → 字符 n-gram；整次匹配在同一向量空间内完成。"""
 import asyncio
 import hashlib
 import json
@@ -8,6 +8,8 @@ import os
 import time
 
 import httpx
+
+from core import embedding
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +33,7 @@ class IntentEmbedding:
             else 'missing_api_key' if not self.key else None
         )
         self.remote_templates = {}
+        self.model_templates = {}
         self.local_templates = {}
         self.lock = asyncio.Lock()
         if self.provider == 'siliconflow' and not self.key:
@@ -38,7 +41,7 @@ class IntentEmbedding:
 
     def status(self):
         return {'configured_provider': self.provider, 'online_configured': self.enabled,
-                'model': self.MODEL if self.enabled else 'local-ngram-256',
+                'model': self.MODEL if self.enabled else 'local-' + embedding.NAME if embedding.current() else 'local-ngram-256',
                 'cooldown': time.monotonic() < self.retry_at, 'last_error': self.last_error,
                 'last_source': self.last_source, 'last_dimensions': self.last_dimensions,
                 'fallback_reason': self.fallback_reason,
@@ -83,17 +86,35 @@ class IntentEmbedding:
                 # 不记录异常全文，避免暴露请求内容或认证信息。
                 self.last_error = (f'http_{ex.response.status_code}' if isinstance(ex, httpx.HTTPStatusError) else type(ex).__name__)
                 self.retry_at = time.monotonic() + 60
-                logger.warning('在线意图向量调用失败，回退本地 n-gram，冷却 60 秒：%s', self.last_error)
+                logger.warning('在线意图向量调用失败，回退本地向量，冷却 60 秒：%s', self.last_error)
+        self.fallback_reason = (
+            'configured_local' if self.provider == 'local'
+            else 'missing_api_key' if not self.key else self.last_error or 'cooldown'
+        )
+        model = embedding.current()
+        if model is not None:
+            try:
+                return await self._local_model_vectors(model, message, snapshot, fingerprint)
+            except Exception as ex:
+                logger.warning('本地意图向量计算失败，回退 n-gram：%s', type(ex).__name__)
         if fingerprint not in self.local_templates:
             self.local_templates = {fingerprint: {key: [local_embed(t) for t in group] for key, group in snapshot.items()}}
         query = local_embed(message)
         self.last_source = 'local-ngram'
         self.last_dimensions = len(query)
-        self.fallback_reason = (
-            'configured_local' if self.provider == 'local'
-            else 'missing_api_key' if not self.key else self.last_error or 'cooldown'
-        )
         return self.local_templates[fingerprint], query, 'local-ngram'
+
+    async def _local_model_vectors(self, model, message, snapshot, fingerprint):
+        async with self.lock:
+            if fingerprint not in self.model_templates:
+                flat = [text for group in snapshot.values() for text in group]
+                vectors = iter(await asyncio.to_thread(model.embed, flat))
+                self.model_templates = {fingerprint: {key: [next(vectors) for _ in group] for key, group in snapshot.items()}}
+            groups = self.model_templates[fingerprint]
+        query = (await asyncio.to_thread(model.embed, [message]))[0]
+        self.last_source = 'local-' + model.name
+        self.last_dimensions = len(query)
+        return groups, query, self.last_source
 
     async def _request(self, client, texts):
         response = await client.post(self.URL, headers={'Authorization': 'Bearer ' + self.key},

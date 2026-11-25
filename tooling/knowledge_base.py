@@ -21,6 +21,8 @@ from typing import Any, Dict, List, Optional
 
 import chromadb
 
+from core.embedding import open_collection
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,20 +30,21 @@ class KnowledgeBase:
     """
     基于 ChromaDB 的 RAG 知识库。
 
-    ChromaDB 内置了 Embedding 模型（all-MiniLM-L6-v2），
-    调用 add() 时自动生成向量，query() 时自动做语义匹配。
-    不需要额外调用 Anthropic Embeddings API。
+    传入 embedder（bge-m3）时中英文可以互相检索；不传则用 ChromaDB 内置的 all-MiniLM-L6-v2，
+    它的词表不认识大部分中文字，只适合英文。都不需要额外调用外部 Embeddings API。
     """
 
     COLLECTION_NAME = "knowledge_base"
+    _min_score: Optional[float] = None      # 低于该余弦相似度的片段不返回；None 表示不过滤
 
     def __init__(
         self,
         chroma_host: str = "localhost",
         chroma_port: int = 8000,
         chroma_path: str = "./data/chroma",
+        embedder: Optional[Any] = None,
     ):
-        # 优先连接独立 ChromaDB 服务；默认 embedding_function 在客户端生成向量。
+        # 优先连接独立 ChromaDB 服务；向量始终在客户端生成。
         self._write_lock = threading.RLock()
         self._use_server = False
         try:
@@ -63,12 +66,14 @@ class KnowledgeBase:
                 settings=chromadb.Settings(anonymized_telemetry=False),
             )
 
-        # 不传 embedding_function 时使用 ChromaDB 客户端默认模型；
-        # Docker 已预下载模型，本地运行首次使用可能触发下载。
-        self._collection = self._client.get_or_create_collection(
-            name=self.COLLECTION_NAME,
+        # 标题参与向量计算：正文片段常常不重复写出主题词。
+        self._collection = open_collection(
+            self._client, self.COLLECTION_NAME, embedder,
+            text_of=lambda document, metadata: f"{metadata.get('title', '')}\n{document}",
             metadata={"description": "Kora RAG 知识库"},
         )
+        if embedder is not None:
+            self._min_score = float(os.getenv("KORA_KB_MIN_SCORE", "0.40"))
 
         # 如果知识库为空，导入默认文档
         seed_demo = os.getenv("KORA_SEED_DEMO_DOCS", "true").lower() in {"1", "true", "yes"}
@@ -141,7 +146,7 @@ class KnowledgeBase:
         """
         语义检索：根据 query 返回最相关的文档片段。
 
-        ChromaDB 内部自动将 query 转为向量，与存储的文档向量做余弦相似度匹配。
+        使用 bge-m3 时 score 为余弦相似度；使用 ChromaDB 默认模型时为 1 减去 L2 距离，只能用于排序。
         """
         if type(top_k) is not int or not 1 <= top_k <= 20:
             raise ValueError("top_k 必须是 1–20 的整数")
@@ -160,10 +165,13 @@ class KnowledgeBase:
                 results["metadatas"][0],
                 results["distances"][0],
             ):
+                score = round(1.0 - dist, 4)  # ChromaDB 返回距离，转为相似度
+                if self._min_score is not None and score < self._min_score:
+                    continue
                 items.append({
                     "title":    meta.get("title", ""),
                     "content":  doc,
-                    "score":    round(1.0 - dist, 4),  # ChromaDB 返回距离，转为相似度
+                    "score":    score,
                     "chunk":    meta.get("chunk_index", 0),
                     "document_id": meta.get("document_id", ""),
                     "version": meta.get("version", ""),

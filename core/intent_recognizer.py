@@ -6,8 +6,8 @@
   2. Embedding 向量相似度（权重 20%）—— 快速匹配常见表达
   3. 关键词模式匹配（权重 10%）—— 零延迟兜底
 
-三路结果通过加权投票合并，置信度低于阈值时降级为 OTHER。
-LLM 和 Embedding 并行调用，不串行等待。
+三路结果通过加权投票合并；融合分和 LLM 自身置信度都低于阈值时降级为 OTHER。
+LLM 和 Embedding 并行调用，不串行等待。紧急度由 LLM 在同一次调用中给出，失败时用关键词兜底。
 """
 import asyncio
 import math
@@ -124,7 +124,25 @@ _INTENT_GROUPS: Dict[IntentCategory, IntentCategory] = {
     IntentCategory.HUMAN_HANDOFF: IntentCategory.ESCALATION,
 }
 
-# 紧急关键词
+# 意图自带的最低紧急度
+_URGENCY_FLOOR = {
+    IntentCategory.ESCALATION: UrgencyLevel.HIGH,
+    IntentCategory.HUMAN_HANDOFF: UrgencyLevel.HIGH,
+    IntentCategory.COMPLAINT: UrgencyLevel.MEDIUM,
+}
+
+# 错误码：独立的 4xx/5xx，排除金额、数量、编号；除显式写明"错误码"外，消息中还要有故障语境。
+_EXPLICIT_CODE = re.compile(r"(?:error(?:[_ ]code)?|错误码|状态码|http)\s*[:：#]?\s*([45]\d{2})(?!\d)", re.I)
+_CODE = re.compile(r"(?<![\dA-Za-z.,¥￥$-])([45]\d{2})(?![\dA-Za-z%-]|[.,]\d)")
+_CODE_CONTEXT = re.compile(
+    r"报(?![销名价告备])|错误|出错|异常|返回|提示|权限|登[录陆不]|接口|请求|页面|网页|后台|刷新|访问|打不开"
+    r"|网关|服务器|系统|error|http|status|code|api|server|gateway", re.I)
+_COUNT_BEFORE = re.compile(r"(?:第|满|减|充|送|花|付|共|约|超过|至少|房间号?|门牌号?|[楼栋室]|订单号?|单号|尾号)\s*[:：]?\s*$")
+_COUNT_AFTER = re.compile(
+    r"\s*(?:元|块|圆|rmb|cny|usd|美元|积分|克|千克|公斤|斤|毫升|升|厘米|米|个|件|只|台|条|张|份|人|位|名|天|小时|分钟|秒"
+    r"|[楼号室层]|笔|兆|多|左右|[万千]|(?:kg|g|ml|mb|gb)\b)", re.I)
+
+# 紧急关键词（仅在 LLM 没有给出紧急度时使用）
 _URGENCY_KEYWORDS = {
     UrgencyLevel.CRITICAL: ["紧急", "emergency", "urgent", "asap", "立刻"],
     UrgencyLevel.HIGH:     ["今天", "马上", "尽快", "hurry", "now"],
@@ -144,9 +162,12 @@ class IntentRecognizer:
     """
     端到端意图识别器。
 
-    LLM 使用 Anthropic Messages 客户端，向量使用独立的硅基流动客户端。
-    模板向量在首次请求时生成并缓存；在线不可用时整次匹配回退本地 n-gram。
+    LLM 使用 Anthropic Messages 客户端，向量优先用硅基流动，其次本地 bge-m3，最后字符 n-gram。
+    模板向量在首次请求时生成并缓存；任一来源不可用时整次匹配换到下一个来源。
     """
+
+    # bge-m3 的余弦相似度整体偏高，0.5 不能说明匹配；dev 集上 0.60 以上约 62% 可信，降级效果最好。
+    MODEL_EMBEDDING_THRESHOLD = 0.60
 
     def __init__(
         self,
@@ -205,7 +226,7 @@ class IntentRecognizer:
 
         intent, confidence, source_scores = self._vote(llm, emb, pat)
         entities = self._extract_entities(message)
-        urgency  = self._urgency(message, intent)
+        urgency  = self._resolve_urgency(llm, message, intent)
 
         result = IntentResult(
             intent=intent,
@@ -219,7 +240,9 @@ class IntentRecognizer:
             embedding_source=emb.get("source", "unavailable"),
         )
 
-        # LRU 缓存
+        # LLM 失败是暂时的；缓存降级结果会让恢复后的同一句话继续判错。
+        if llm.get("failed"):
+            return result
         if len(self._cache) >= 1000:
             for k in list(self._cache)[:500]:
                 del self._cache[k]
@@ -250,6 +273,7 @@ class IntentRecognizer:
         if message not in tpls:
             tpls.append(message)
             self._embedding.remote_templates.clear()
+            self._embedding.model_templates.clear()
             self._embedding.local_templates.clear()
             self._cache.clear()  # 模板更新后旧缓存可能对应过时结果
             self._cache_expiries.clear()
@@ -282,6 +306,12 @@ class IntentRecognizer:
 如果用户问题能匹配细粒度业务意图，请优先返回细粒度意图，而不是宽泛大类。
 例如退款优先返回 refund，发票优先返回 invoice，登录故障优先返回 technical_login。
 
+urgency 判断事情本身的严重程度，不看用户是否写了"紧急""立刻""马上"：
+- critical: 正在造成实际危害、需要人工立即介入，如资金或账户已被他人盗用、数据泄露或丢失、服务大面积不可用、人身安全
+- high: 核心功能或资金受影响，拖延会造成明确损失；或只有异地登录、陌生设备等可疑迹象、没有提到实际损失的安全问题
+- medium: 有问题需要处理，但可以等待
+- low: 咨询、闲聊、反馈和一般请求
+
 示例:
 {examples}
 
@@ -289,7 +319,7 @@ class IntentRecognizer:
         用户消息: "{message}"
 
 返回格式（仅 JSON，不要其他文字）:
-{{"intent": "<意图值>", "confidence": <0-1>, "reasoning": "<一句话说明>"}}
+{{"intent": "<意图值>", "confidence": <0-1>, "urgency": "<low|medium|high|critical>", "reasoning": "<一句话说明>"}}
 
 可选意图: {", ".join(c.value for c in IntentCategory)}"""
         prompt = self._clean_text(prompt)
@@ -298,7 +328,9 @@ class IntentRecognizer:
             resp = await asyncio.wait_for(create_message(self.client,
                 stage="intent",
                 model=self.model,
-                max_tokens=256,
+                # 默认开启思考的模型会先消耗输出额度，额度过小会截断 JSON。
+                max_tokens=max(256, int(os.getenv("KORA_INTENT_MAX_TOKENS", "1024"))),
+                effort=os.getenv("KORA_INTENT_EFFORT", "low").strip(),
                 temperature=0.1,
                 messages=[{"role": "user", "content": prompt}],
             ), timeout=max(0.1, float(os.getenv("KORA_INTENT_TIMEOUT_S", "8"))))
@@ -312,6 +344,8 @@ class IntentRecognizer:
             confidence = data.get("confidence")
             if isinstance(confidence, bool) or not isinstance(confidence, (int, float)) or not math.isfinite(confidence) or not 0 <= confidence <= 1:
                 raise ValueError("意图 confidence 必须是 0 到 1 的有限数字")
+            # 紧急度缺失或无效不影响意图，由关键词兜底。
+            data["urgency"] = UrgencyLevel.__members__.get(str(data.get("urgency", "")).strip().upper())
             return data
         except Exception as ex:
             logger.warning(f"LLM 识别失败: {ex}")
@@ -337,6 +371,7 @@ class IntentRecognizer:
     def _pattern_recognize(self, message: str) -> Dict[str, Any]:
         """策略 3：关键词模式匹配（同步，零延迟兜底）。"""
         msg = message.lower()
+        codes = self._error_codes(message)
         specific_patterns = {
             IntentCategory.HUMAN_HANDOFF: ["转人工", "人工客服", "找人工"],
             IntentCategory.ORDER_STATUS: ["订单状态", "发货了吗", "处理到哪", "order status"],
@@ -345,8 +380,8 @@ class IntentRecognizer:
             IntentCategory.INVOICE: ["发票", "抬头", "税号", "invoice"],
             IntentCategory.PAYMENT_ISSUE: ["重复扣款", "多扣", "支付失败", "扣费", "payment failed"],
             IntentCategory.ACCOUNT_SECURITY: ["被盗", "异常登录", "重置密码", "两步验证", "安全"],
-            IntentCategory.TECHNICAL_LOGIN: ["无法登录", "登录失败", "401", "验证码"],
-            IntentCategory.TECHNICAL_CRASH: ["崩溃", "闪退", "500", "报错", "crash"],
+            IntentCategory.TECHNICAL_LOGIN: ["无法登录", "登录失败", "验证码"] + [c for c in codes if c in ("401", "403")],
+            IntentCategory.TECHNICAL_CRASH: ["崩溃", "闪退", "报错", "crash"] + [c for c in codes if c.startswith("5")],
         }
         generic_patterns = {
             IntentCategory.ESCALATION: ["投诉", "经理", "supervisor"],
@@ -383,10 +418,13 @@ class IntentRecognizer:
             "pattern": float(pat.get("confidence", 0.0) or 0.0),
         }
         if llm.get("failed"):
-            if emb.get("intent") != IntentCategory.OTHER and emb.get("confidence", 0.0) > 0:
-                return emb["intent"], source_scores["embedding"], source_scores
-            if pat.get("intent") != IntentCategory.OTHER and pat.get("confidence", 0.0) > 0:
+            # 只采用明确的业务关键词、升级诉求或达到阈值的向量；把低分猜测当成意图会误派专业 Agent。
+            if (pat.get("intent") in _SPECIFIC_INTENTS | {IntentCategory.ESCALATION}
+                    and source_scores["pattern"] >= self.threshold):
                 return pat["intent"], source_scores["pattern"], source_scores
+            required = self.threshold if emb.get("source", "local-ngram") == "local-ngram" else self.MODEL_EMBEDDING_THRESHOLD
+            if emb.get("intent") != IntentCategory.OTHER and source_scores["embedding"] >= required:
+                return emb["intent"], source_scores["embedding"], source_scores
             return IntentCategory.OTHER, 0.0, source_scores
 
         if self._embedding_enabled:
@@ -417,7 +455,11 @@ class IntentRecognizer:
             source_scores["refined_by_pattern"] = pat_conf
             return pat_intent, max(best_score, pat_conf), source_scores
         if best_score < self.threshold:
-            return IntentCategory.OTHER, best_score, source_scores
+            # 另外两路没有命中时融合分只剩 LLM 的权重；LLM 自己达到阈值就不降级。
+            llm_group = _INTENT_GROUPS.get(llm.get("intent"), llm.get("intent"))
+            if llm_group != best_group or source_scores["llm"] < self.threshold:
+                return IntentCategory.OTHER, best_score, source_scores
+            source_scores["accepted_by_llm"] = source_scores["llm"]
         return best, best_score, source_scores
 
     # ── 实体提取 ──────────────────────────────────────────────────────────────
@@ -426,15 +468,22 @@ class IntentRecognizer:
         """用规则提取高价值实体，避免每次识别都额外调用 LLM。"""
         message = self._clean_text(message)
         return {
-            "order_id": self._unique(re.findall(r"(?:订单号?|order(?:_id)?|#)\s*[:：#]?\s*([A-Za-z0-9_-]{4,32})", message, re.I)),
+            "order_id": self._unique(re.findall(
+                r"(?:订单(?:编?号)?|order(?:_id)?|#)\s*[:：#]?\s*((?=[A-Za-z_-]*\d)[A-Za-z0-9_-]{4,32})", message, re.I)),
             "product": [],
             "date": self._unique(re.findall(r"(今天|明天|昨天|本周|这周|下周|\d{4}[-/.年]\d{1,2}[-/.月]\d{1,2}日?)", message)),
             "amount": self._unique(re.findall(r"((?:¥|￥)\s*\d+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?\s*(?:元|块|rmb|cny|usd|美元))", message, re.I)),
-            "error_code": self._unique(
-                re.findall(r"(?:error(?:_code)?|错误码|状态码|http)\s*[:：#]?\s*([45]\d{2})\b", message, re.I)
-                + re.findall(r"\b([45]\d{2})\b", message)
-            ),
+            "error_code": self._error_codes(message),
         }
+
+    @classmethod
+    def _error_codes(cls, message: str) -> List[str]:
+        """提取错误码；\\b 在汉字与数字之间不成立，因此用显式边界。"""
+        codes = _EXPLICIT_CODE.findall(message)
+        if _CODE_CONTEXT.search(message):
+            codes += [m.group(1) for m in _CODE.finditer(message)
+                      if not _COUNT_BEFORE.search(message[:m.start()]) and not _COUNT_AFTER.match(message[m.end():])]
+        return cls._unique(codes)
 
     # ── 辅助 ──────────────────────────────────────────────────────────────────
 
@@ -457,6 +506,13 @@ class IntentRecognizer:
             vec[idx] += sign
         return vec
 
+    def _resolve_urgency(self, llm: Dict[str, Any], message: str, intent: IntentCategory) -> UrgencyLevel:
+        """LLM 给出的紧急度优先；失败或缺失时用关键词。"""
+        level = None if llm.get("failed") else llm.get("urgency")
+        if level is None:
+            return self._urgency(message, intent)
+        return max(level, _URGENCY_FLOOR.get(intent, level), key=lambda item: item.value)
+
     def _urgency(self, message: str, intent: IntentCategory) -> UrgencyLevel:
         msg = message.lower()
         msg = re.sub(r"(?:不(?:是|用|需要)?|无需|无须|非|并不|没那么|暂不)\s*(?:紧急|立刻|马上|尽快|快点)", "", msg)
@@ -464,11 +520,7 @@ class IntentRecognizer:
         for level, kws in _URGENCY_KEYWORDS.items():
             if any(re.search(rf"(?<![a-z]){re.escape(kw)}(?![a-z])", msg) if kw.isascii() else kw in msg for kw in kws):
                 return level
-        if intent in (IntentCategory.ESCALATION, IntentCategory.HUMAN_HANDOFF):
-            return UrgencyLevel.HIGH
-        if intent == IntentCategory.COMPLAINT:
-            return UrgencyLevel.MEDIUM
-        return UrgencyLevel.LOW
+        return _URGENCY_FLOOR.get(intent, UrgencyLevel.LOW)
 
     def _cache_key(self, message: str, history: Optional[List[Dict[str, str]]] = None) -> str:
         payload = {"message": self._clean_text(message)}
@@ -492,9 +544,15 @@ class IntentRecognizer:
         message: str,
         patterns: Dict[IntentCategory, List[str]],
     ) -> tuple[IntentCategory, float]:
+        def hit(kw: str) -> bool:
+            # 英文关键词要求词首边界，短词还要求词尾边界，避免 "this" 命中 "hi"。
+            if not (kw.isascii() and kw.isalpha()):
+                return kw in message
+            return bool(re.search(rf"(?<![a-z]){kw}" + (r"(?![a-z])" if len(kw) <= 3 else ""), message))
+
         best_cat, best_score = IntentCategory.OTHER, 0.0
         for cat, kws in patterns.items():
-            hits = sum(1 for kw in kws if kw in message)
+            hits = sum(1 for kw in kws if hit(kw))
             if not hits:
                 continue
             # 单个明确业务关键词就给可用置信度；多个关键词命中时提高置信度。

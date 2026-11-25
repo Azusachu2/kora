@@ -49,6 +49,10 @@ _mcp_client = None
 from evaluation.jobs import EvaluationJobs
 _eval_jobs = EvaluationJobs()
 
+def _flag(name: str, default: str = "false") -> bool:
+    return os.getenv(name, default).strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _anthropic_cfg() -> Dict[str, Any]:
     key = os.getenv("ANTHROPIC_API_KEY", "")
     if not key:
@@ -82,6 +86,10 @@ async def lifespan(app: FastAPI):
     cfg = _anthropic_cfg()
     logger.info(f"模型: {cfg['model']}  base_url: {cfg.get('base_url', '(官方)')}")
 
+    # 知识库、记忆和意图向量共用同一个本地多语言模型
+    from core.embedding import load_embedder
+    embedder = await asyncio.to_thread(load_embedder)
+
     # 意图识别器（Orchestrator 内部也会创建，这里单独暴露给 Evaluator）
     recognizer = IntentRecognizer(
         api_key=cfg["api_key"],
@@ -114,6 +122,7 @@ async def lifespan(app: FastAPI):
         api_key=cfg["api_key"],
         base_url=cfg.get("base_url"),
         model=cfg["model"],
+        embedder=embedder,
     )
 
     # MCP 工具管理器 + RAG 知识库（基于 ChromaDB 的真实检索）
@@ -122,10 +131,13 @@ async def lifespan(app: FastAPI):
         base_url=cfg.get("base_url"),
         model=cfg["model"],
     )
+    _tool_manager.rag_rewrite = _flag("KORA_RAG_REWRITE")
+    _tool_manager.rag_rerank = _flag("KORA_RAG_RERANK")
     kb = KnowledgeBase(
         chroma_host=os.getenv("CHROMA_HOST", "chromadb"),
         chroma_port=int(os.getenv("CHROMA_PORT", "8000")),
         chroma_path=os.getenv("CHROMA_PERSIST_DIRECTORY", "/app/data/chroma"),
+        embedder=embedder,
     )
     logger.info(f"知识库已加载: {await kb.doc_count_async()} 个文档片段")
 
@@ -498,8 +510,8 @@ async def prometheus_metrics():
 @app.post("/search")
 async def search(query: str = Query(min_length=1, max_length=2000), top_k: int = Query(default=5, ge=1, le=20)):
     """
-    演示检索优化链路：查询改写 → 并行召回 → 重排 → Top-K。
-    展示 MCP 工具调用的核心亮点。
+    检索链路：向量召回 → 去重 → Top-K。
+    KORA_RAG_REWRITE / KORA_RAG_RERANK 可分别打开查询改写和 LLM 重排。
     """
     if _tool_manager is None:
         raise HTTPException(503, "服务未就绪")
@@ -551,7 +563,7 @@ async def add_knowledge(body: BatchDocInput):
     """
     批量导入文档到知识库。
 
-    文档会自动切片（每片 500 字）并存入 ChromaDB，ChromaDB 内置 Embedding 模型自动向量化。
+    文档会自动切片（每片 500 字），用本地多语言模型向量化后存入 ChromaDB。
 
     示例请求体：
     ```json
@@ -778,6 +790,8 @@ async def _cli():
     from core.skill_loader import SkillManager
 
     cfg = _anthropic_cfg()
+    from core.embedding import load_embedder
+    embedder = load_embedder()
     skill_manager = SkillManager(
         root_dir=os.getenv("KORA_SKILLS_DIR", str(pathlib.Path(_ROOT) / "skills")),
         max_prompt_chars=int(os.getenv("KORA_SKILLS_MAX_PROMPT_CHARS", "5000")),
@@ -797,6 +811,7 @@ async def _cli():
         api_key=cfg["api_key"],
         base_url=cfg.get("base_url"),
         model=cfg["model"],
+        embedder=embedder,
     )
 
     from tooling.tool_manager import MCPToolManager, Tool
@@ -804,9 +819,11 @@ async def _cli():
     from tooling.mcp_client import StandardMCPClient, load_servers
     from agents.tools import build_shared_rag_tools
     manager = MCPToolManager(**cfg)
+    manager.rag_rewrite, manager.rag_rerank = _flag("KORA_RAG_REWRITE"), _flag("KORA_RAG_RERANK")
     kb = KnowledgeBase(chroma_host=os.getenv("CHROMA_HOST", "localhost"),
                        chroma_port=int(os.getenv("CHROMA_PORT", "8000")),
-                       chroma_path=os.getenv("CHROMA_PERSIST_DIRECTORY", "/tmp/chroma"))
+                       chroma_path=os.getenv("CHROMA_PERSIST_DIRECTORY", "/tmp/chroma"),
+                       embedder=embedder)
     manager.register(Tool(name="knowledge_search", description="本地知识库检索",
                           handler=kb.search_handler, schema={"type":"object", "properties":{
                               "query":{"type":"string"}, "top_k":{"type":"integer", "minimum":1}},

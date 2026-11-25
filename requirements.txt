@@ -13,6 +13,11 @@ python-multipart==0.0.12    # FastAPI 文件上传支持
 redis==5.2.1
 chromadb==0.5.23           # 向量数据库（长期记忆）
 
+# ── 本地向量模型（core/embedding.py；chromadb 本身也依赖这几个包）──────────────
+onnxruntime>=1.17
+tokenizers>=0.20
+numpy>=1.26
+
 # ── 监控 ──────────────────────────────────────────────────────────────────────
 prometheus-client==0.21.1
 

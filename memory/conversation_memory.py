@@ -9,7 +9,7 @@
 关键设计：
   - 上下文构建时三级记忆融合，按重要性 + 时效性排序
   - 工作记忆超过阈值时自动压缩（LLM 摘要），防止 context 爆炸
-  - Embedding 由 ChromaDB 默认模型生成，LLM 用于摘要和画像提炼
+  - Embedding 由传入的本地模型（bge-m3）生成，未传入时用 ChromaDB 默认模型；LLM 用于摘要和画像提炼
 """
 import hashlib
 import asyncio
@@ -29,6 +29,7 @@ import redis.asyncio as redis
 from redis.exceptions import WatchError
 from anthropic import AsyncAnthropic
 
+from core.embedding import open_collection
 from core.llm_utils import create_message, extract_text_content
 from core.performance import record_event
 from core.concurrency import KeyedLocks, redis_lease
@@ -102,6 +103,7 @@ class MemoryManager:
         api_key:      str = "",
         base_url:     Optional[str] = None,
         model:        str = "claude-3-5-sonnet-20241022",
+        embedder:     Optional[Any] = None,
     ):
         kwargs: Dict[str, Any] = {"api_key": api_key}
         if base_url:
@@ -132,9 +134,9 @@ class MemoryManager:
             )
 
         # 情景记忆：存储历史对话片段
-        self._episodic = chroma.get_or_create_collection("episodic")
+        self._episodic = open_collection(chroma, "episodic", embedder)
         # 用户画像：存储提炼出的偏好和实体
-        self._profile  = chroma.get_or_create_collection("user_profile")
+        self._profile  = open_collection(chroma, "user_profile", embedder)
 
     @asynccontextmanager
     async def conversation(self, user_id: str, conv_id: str):

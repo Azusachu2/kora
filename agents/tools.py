@@ -205,6 +205,7 @@ def build_shared_rag_tools(tool_manager: Any) -> Dict[str, AgentToolSpec]:
             "success": True,
             "query": query,
             "top_k": top_k,
+            **({} if result.data else {"message": "知识库中没有找到相关资料，请如实说明，不要编造政策。"}),
             "results": result.data,
             "cached": bool(getattr(result, "cached", False)),
             "reranked": bool(getattr(result, "reranked", False)),

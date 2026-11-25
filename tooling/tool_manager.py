@@ -154,6 +154,9 @@ class MCPToolManager:
         self._cache_versions: Dict[str, int] = {}
         self._cache: Dict[str, tuple] = {}   # key → (result, expire_at, reranked)
         self._search_locks = KeyedLocks()
+        # 查询改写与重排各增加一次 LLM 调用；由 api/main.py 按配置关闭。
+        self.rag_rewrite = True
+        self.rag_rerank = True
 
     def fork(self):
         """共享只读依赖和 HTTP 客户端，隔离工具统计、熔断和缓存。"""
@@ -161,6 +164,7 @@ class MCPToolManager:
         other._client, other._model = self._client, self._model
         other._cache, other._cache_versions = {}, {}
         other._search_locks = KeyedLocks()
+        other.rag_rewrite, other.rag_rerank = self.rag_rewrite, self.rag_rerank
         other._tools = {name: replace(tool) for name, tool in self._tools.items()}
         return other
 
@@ -384,9 +388,11 @@ class MCPToolManager:
                 return result
 
     async def _search_uncached(self, tool_name, query, top_k, context):
-        # 1. 查询改写：生成多角度子查询
-        sub_queries = await self.rewrite_query(query, n=3)
-        logger.info(f"查询改写: {query!r} → {sub_queries}")
+        # 1. 查询改写：生成多角度子查询（可关闭）
+        sub_queries = [query]
+        if self.rag_rewrite:
+            sub_queries = await self.rewrite_query(query, n=3)
+            logger.info(f"查询改写: {query!r} → {sub_queries}")
 
         # 2. 并行召回：所有子查询同时检索
         recall_k = max(top_k, 5)
@@ -409,9 +415,16 @@ class MCPToolManager:
                         merged.append(item)
 
         if not merged:
+            # 检索正常但没有相关资料，与检索失败是两回事。
+            if results and all(isinstance(r, ToolResult) and r.success for r in results):
+                return ToolResult(success=True, data=[], tool_name=tool_name)
             return ToolResult(success=False, data=[], tool_name=tool_name, error="检索无可用结果：" + "; ".join(dict.fromkeys(r.error for r in results if isinstance(r, ToolResult) and r.error)))
 
-        # 4. 重排：用 LLM 对合并结果按相关性打分，取 Top-K
+        # 4. 重排：用 LLM 对合并结果按相关性打分，取 Top-K（可关闭，关闭时按检索分排序）
+        if not self.rag_rerank:
+            if all(isinstance(item, dict) and isinstance(item.get("score"), (int, float)) for item in merged):
+                merged.sort(key=lambda item: item["score"], reverse=True)
+            return ToolResult(success=True, data=merged[:top_k], tool_name=tool_name)
         data, reranked = await self._rerank_with_status(query, merged, top_k)
         return ToolResult(success=True, data=data, tool_name=tool_name, reranked=reranked)
 
