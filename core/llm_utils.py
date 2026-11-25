@@ -14,6 +14,10 @@ async def create_message(client: Any, *, stage: str = "unspecified", **kwargs: A
     Use extra_body for compatibility with the pinned Anthropic SDK; leave other
     providers and explicitly configured thinking modes unchanged.
     """
+    # Opus 5.5 rejects temperature, including the values used by legacy callers.
+    # Keep other models' sampling settings unchanged.
+    if kwargs.get("model") == "claude-opus-5-5":
+        kwargs.pop("temperature", None)
     if urlsplit(str(getattr(client, "base_url", ""))).hostname == "api.deepseek.com":
         extra_body = dict(kwargs.get("extra_body") or {})
         if "thinking" not in kwargs and "thinking" not in extra_body:

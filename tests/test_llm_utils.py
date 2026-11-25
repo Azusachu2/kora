@@ -125,6 +125,29 @@ def test_other_providers_keep_original_request_body(base_url):
     asyncio.run(run())
 
 
+@pytest.mark.parametrize("model", ["claude-opus-5-5", "other-model"])
+def test_opus_55_temperature_compatibility_at_http_boundary(model):
+    async def run():
+        def handle(request):
+            body = json.loads(request.content)
+            if model == "claude-opus-5-5":
+                assert "temperature" not in body
+            else:
+                assert body["temperature"] == 0.2
+            assert body["model"] == model and body["max_tokens"] == 256
+            return model_response([{"type": "text", "text": "ok"}])
+        async with AsyncAnthropic(
+            api_key="test-only", base_url="https://api.anthropic.com",
+            http_client=httpx.AsyncClient(transport=httpx.MockTransport(handle)),
+        ) as client:
+            result = await create_message(
+                client, model=model, temperature=0.2, max_tokens=256,
+                messages=[{"role": "user", "content": "hello"}],
+            )
+            assert extract_text_content(result.content) == "ok"
+    asyncio.run(run())
+
+
 def test_explicit_thinking_and_extra_body_are_preserved():
     async def run():
         create = AsyncMock()
