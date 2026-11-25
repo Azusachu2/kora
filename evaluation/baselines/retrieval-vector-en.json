@@ -1,0 +1,180 @@
+{
+  "suite": "retrieval",
+  "mode": "vector",
+  "split": "all",
+  "reps": 1,
+  "cases": 64,
+  "dataset": "0cfb6178c8a0ef94",
+  "status": "complete",
+  "model_mismatches": [],
+  "timestamp": "2026-11-24T18:29:04",
+  "git": "4ee28fa-dirty",
+  "config": {
+    "model": null,
+    "embedding": "chroma-default",
+    "concurrency": 4,
+    "limit": 0,
+    "lang": "en",
+    "chunks": 43
+  },
+  "metrics": {
+    "hit1": {
+      "rate": 0.069,
+      "n": 58,
+      "ci95": [
+        0.0271,
+        0.1643
+      ]
+    },
+    "hit3": {
+      "rate": 0.2069,
+      "n": 58,
+      "ci95": [
+        0.1225,
+        0.3277
+      ]
+    },
+    "hit5": {
+      "rate": 0.3793,
+      "n": 58,
+      "ci95": [
+        0.2656,
+        0.508
+      ]
+    },
+    "answer5": {
+      "rate": 0.3448,
+      "n": 58,
+      "ci95": [
+        0.2356,
+        0.4733
+      ]
+    },
+    "recall5": 0.3793,
+    "mrr5": 0.1626,
+    "unanswerable": {
+      "n": 6,
+      "returned_any": 6,
+      "top_score_auc": 0.4971,
+      "top_score_p50": {
+        "answerable": -0.7048,
+        "unanswerable": -0.7681
+      }
+    },
+    "errors": {},
+    "llm_errors": {},
+    "by_split": {
+      "dev": {
+        "hit1": 0.0263,
+        "hit5": 0.3158,
+        "n": 38
+      },
+      "test": {
+        "hit1": 0.15,
+        "hit5": 0.5,
+        "n": 20
+      }
+    },
+    "by_tag": {
+      "distractor": {
+        "hit1": 0.0,
+        "hit5": 0.2857,
+        "answer5": 0.2857,
+        "n": 7
+      },
+      "english": {
+        "hit1": 0.069,
+        "hit5": 0.3793,
+        "answer5": 0.3448,
+        "n": 58
+      },
+      "long_doc": {
+        "hit1": 0.0,
+        "hit5": 0.5,
+        "answer5": 0.1667,
+        "n": 6
+      },
+      "multi_doc": {
+        "hit1": 0.0,
+        "hit5": 0.0,
+        "answer5": 0.0,
+        "n": 2
+      }
+    },
+    "latency_ms": {
+      "p50": 47.5,
+      "p95": 66.6,
+      "max": 73.6
+    },
+    "llm_calls": 0,
+    "llm_calls_per_case": 0.0,
+    "input_tokens": 0,
+    "output_tokens": 0
+  },
+  "rows": [
+    {"id": "en-r001", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["invoice-change", "affiliate", "presale", "payment-methods", "seller-onboarding"], "top_score": -0.6691, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 62.7, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r002", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["invoice-change", "affiliate", "membership-points", "returns-howto", "app-install"], "top_score": -0.801, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 60.3, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r003", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["affiliate", "presale", "invoice-change", "membership-points", "refund-arrival"], "top_score": -0.6391, "answerable": true, "hit1": false, "hit3": false, "hit5": true, "recall5": 1.0, "mrr5": 0.2, "answer5": true, "rep": 0, "latency_ms": 63.8, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r004", "split": "dev", "tags": ["english", "distractor"], "returned": 5, "ranked": ["affiliate", "invoice-change", "membership-points", "presale", "payment-methods"], "top_score": -0.6525, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 63.2, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r005", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["affiliate", "returns-howto", "webhook", "invoice-change", "presale"], "top_score": -0.8498, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 60.4, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r006", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["service-hours", "enterprise-contract", "installation", "delivery", "webhook"], "top_score": -0.8228, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 55.7, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r007", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["duplicate-charge", "invoice-change", "invoice-apply", "returns-howto", "affiliate"], "top_score": -0.7075, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 58.4, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r008", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["affiliate", "presale", "membership-points", "invoice-change", "duplicate-charge"], "top_score": -0.5761, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 54.6, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r009", "split": "dev", "tags": ["english", "distractor"], "returned": 5, "ranked": ["membership-points", "affiliate", "presale", "invoice-change", "returns-howto"], "top_score": -0.6808, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 73.6, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r010", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["returns-howto", "upload-export", "seller-onboarding", "affiliate", "invoice-apply"], "top_score": -0.5888, "answerable": true, "hit1": false, "hit3": false, "hit5": true, "recall5": 1.0, "mrr5": 0.2, "answer5": true, "rep": 0, "latency_ms": 64.5, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r011", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["returns-howto", "payment-methods", "invoice-apply", "membership-points", "affiliate"], "top_score": -0.7108, "answerable": true, "hit1": false, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 0.3333, "answer5": true, "rep": 0, "latency_ms": 61.9, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r012", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["returns-howto", "payment-methods", "invoice-apply", "affiliate", "invoice-change"], "top_score": -0.399, "answerable": true, "hit1": false, "hit3": false, "hit5": true, "recall5": 1.0, "mrr5": 0.2, "answer5": true, "rep": 0, "latency_ms": 66.6, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r013", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["affiliate", "payment-methods", "returns-howto", "membership-points", "invoice-change"], "top_score": -0.625, "answerable": true, "hit1": false, "hit3": false, "hit5": true, "recall5": 1.0, "mrr5": 0.2, "answer5": true, "rep": 0, "latency_ms": 49.4, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r014", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["returns-howto", "invoice-apply", "affiliate", "invoice-change", "payment-methods"], "top_score": -0.3608, "answerable": true, "hit1": false, "hit3": false, "hit5": true, "recall5": 1.0, "mrr5": 0.2, "answer5": true, "rep": 0, "latency_ms": 30.8, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r015", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["invoice-change", "affiliate", "payment-methods", "invoice-apply", "returns-howto"], "top_score": -0.7507, "answerable": true, "hit1": false, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 0.3333, "answer5": true, "rep": 0, "latency_ms": 48.5, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r016", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["giftcard", "upload-export", "invoice-change", "order-query", "account-cancel"], "top_score": -0.5655, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 41.9, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r017", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["affiliate", "returns-howto", "invoice-change", "payment-methods", "refund-arrival"], "top_score": -0.4768, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 30.7, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r018", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["invoice-change", "membership-points", "affiliate", "presale", "giftcard"], "top_score": -0.7994, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 32.3, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r019", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["enterprise-contract", "warranty", "refund-policy", "giftcard", "privacy"], "top_score": -0.9514, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 33.2, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r020", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["membership-points", "presale", "bluetooth", "returns-howto", "enterprise-contract"], "top_score": -0.7946, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 45.8, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r021", "split": "test", "tags": ["english", "distractor"], "returned": 5, "ranked": ["membership-points", "affiliate", "invoice-change", "returns-howto", "payment-methods"], "top_score": -0.7383, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 35.9, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r022", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["membership-points", "affiliate", "invoice-change", "duplicate-charge", "presale"], "top_score": -0.747, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 34.5, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r023", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["webhook", "service-hours", "delivery", "bind-phone", "notifications"], "top_score": -0.7048, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 33.9, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r024", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["invoice-change", "webhook", "invoice-apply", "order-query", "duplicate-charge"], "top_score": -0.6092, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 34.4, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r025", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["account-security", "refund-arrival", "membership-points", "sub-accounts", "invoice-change"], "top_score": -0.7369, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 32.6, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r026", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["payment-methods", "returns-howto", "order-query", "delivery", "affiliate"], "top_score": -0.454, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 32.7, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r027", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["returns-howto", "seller-onboarding", "order-query", "affiliate", "presale"], "top_score": -0.4671, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 41.4, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r028", "split": "test", "tags": ["english", "distractor"], "returned": 5, "ranked": ["affiliate", "account-cancel", "price-protect", "invoice-change", "upload-export"], "top_score": -0.8054, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 41.0, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r029", "split": "dev", "tags": ["english", "distractor"], "returned": 5, "ranked": ["duplicate-charge", "affiliate", "upload-export", "payment-methods", "invoice-apply"], "top_score": -0.6043, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 38.6, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r030", "split": "dev", "tags": ["english", "distractor"], "returned": 5, "ranked": ["affiliate", "invoice-change", "refund-arrival", "presale", "payment-methods"], "top_score": -0.7848, "answerable": true, "hit1": false, "hit3": false, "hit5": true, "recall5": 1.0, "mrr5": 0.25, "answer5": true, "rep": 0, "latency_ms": 30.8, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r032", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["api-limits", "giftcard", "reviews", "bind-phone", "refund-policy"], "top_score": -0.7863, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 25.8, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r034", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["tech-troubleshooting", "returns-howto", "invoice-change", "webhook", "notifications"], "top_score": -0.785, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 26.9, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r035", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["app-install", "installation", "lost-parcel", "subscription", "giftcard"], "top_score": -0.7288, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 53.1, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r037", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["returns-howto", "invoice-apply", "lost-parcel", "service-hours", "webhook"], "top_score": -0.6527, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 48.2, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r038", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["webhook", "bluetooth", "api-limits", "sub-accounts", "tech-troubleshooting"], "top_score": -0.7477, "answerable": true, "hit1": false, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 0.3333, "answer5": true, "rep": 0, "latency_ms": 46.3, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r039", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["enterprise-contract", "delivery", "refund-policy", "service-hours", "api-limits"], "top_score": -0.7403, "answerable": true, "hit1": false, "hit3": false, "hit5": true, "recall5": 1.0, "mrr5": 0.2, "answer5": true, "rep": 0, "latency_ms": 33.2, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r040", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["webhook", "modify-order", "account-security", "bind-phone", "subscription"], "top_score": -0.9372, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 54.3, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r041", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["upload-export", "payment-methods", "notifications", "affiliate", "duplicate-charge"], "top_score": -0.2053, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 54.8, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r042", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["upload-export", "app-install", "tech-troubleshooting", "api-limits", "bluetooth"], "top_score": -0.4028, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 47.8, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r043", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["app-install", "duplicate-charge", "lost-parcel", "membership-points", "subscription"], "top_score": -0.6527, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 52.9, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r045", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["refund-arrival", "app-install", "duplicate-charge", "warranty", "account-security"], "top_score": -0.6559, "answerable": true, "hit1": false, "hit3": false, "hit5": true, "recall5": 1.0, "mrr5": 0.25, "answer5": true, "rep": 0, "latency_ms": 32.6, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r046", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["app-install", "reviews", "enterprise-contract", "seller-onboarding", "upload-export"], "top_score": -0.7459, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 60.8, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r047", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["returns-howto", "presale", "affiliate", "seller-onboarding", "delivery"], "top_score": -0.8775, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 57.7, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r048", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["service-hours", "enterprise-contract", "warranty", "notifications", "sub-accounts"], "top_score": -0.4544, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 53.0, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r049", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["presale", "affiliate", "membership-points", "seller-onboarding", "reviews"], "top_score": -0.464, "answerable": true, "hit1": false, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 0.3333, "answer5": true, "rep": 0, "latency_ms": 34.2, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r050", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["presale", "membership-points", "affiliate", "invoice-change", "seller-onboarding"], "top_score": -0.536, "answerable": true, "hit1": false, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 0.5, "answer5": true, "rep": 0, "latency_ms": 33.4, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r052", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["returns-howto", "upload-export", "affiliate", "payment-methods", "invoice-change"], "top_score": -0.7205, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 63.6, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r053", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["webhook", "delivery", "service-hours", "bind-phone", "account-security"], "top_score": -0.6261, "answerable": true, "hit1": false, "hit3": false, "hit5": true, "recall5": 1.0, "mrr5": 0.2, "answer5": true, "rep": 0, "latency_ms": 57.8, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r055", "split": "dev", "tags": ["english", "distractor"], "returned": 5, "ranked": ["returns-howto", "webhook", "membership-points", "api-limits", "tech-troubleshooting"], "top_score": -0.8593, "answerable": true, "hit1": false, "hit3": false, "hit5": true, "recall5": 1.0, "mrr5": 0.2, "answer5": true, "rep": 0, "latency_ms": 46.3, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r056", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["app-install", "bluetooth", "virtual-refund", "group-buy", "api-limits"], "top_score": -0.4801, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 33.0, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r068", "split": "dev", "tags": ["english", "long_doc"], "returned": 5, "ranked": ["invoice-change", "coupons", "account-cancel", "installation", "affiliate"], "top_score": -0.8418, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 57.4, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r069", "split": "dev", "tags": ["english", "long_doc"], "returned": 5, "ranked": ["presale", "returns-howto", "affiliate", "invoice-change", "bluetooth"], "top_score": -0.611, "answerable": true, "hit1": false, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 0.5, "answer5": true, "rep": 0, "latency_ms": 52.3, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r072", "split": "test", "tags": ["english", "long_doc"], "returned": 5, "ranked": ["returns-howto", "enterprise-contract", "giftcard", "price-protect", "affiliate"], "top_score": -0.7466, "answerable": true, "hit1": false, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 0.5, "answer5": false, "rep": 0, "latency_ms": 50.1, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r073", "split": "test", "tags": ["english", "long_doc"], "returned": 5, "ranked": ["warranty", "enterprise-contract", "refund-policy", "delivery", "seller-onboarding"], "top_score": -0.7103, "answerable": true, "hit1": false, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 0.5, "answer5": false, "rep": 0, "latency_ms": 47.5, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r075", "split": "dev", "tags": ["english", "long_doc"], "returned": 5, "ranked": ["service-hours", "enterprise-contract", "giftcard", "reviews", "delivery"], "top_score": -0.6621, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 67.2, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r076", "split": "test", "tags": ["english", "long_doc"], "returned": 5, "ranked": ["realname", "upload-export", "invoice-change", "affiliate", "international"], "top_score": -0.9128, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 71.0, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r078", "split": "dev", "tags": ["english", "multi_doc"], "returned": 5, "ranked": ["affiliate", "invoice-change", "membership-points", "payment-methods", "seller-onboarding"], "top_score": -0.4612, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 33.7, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r081", "split": "dev", "tags": ["english", "multi_doc"], "returned": 5, "ranked": ["privacy", "tech-troubleshooting", "returns-howto", "webhook", "coupons"], "top_score": -0.6625, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 65.7, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r082", "split": "test", "tags": ["english", "unanswerable"], "returned": 5, "ranked": ["returns-howto", "invoice-apply", "payment-methods", "affiliate", "notifications"], "top_score": -0.4632, "answerable": false, "rep": 0, "latency_ms": 37.1, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r083", "split": "dev", "tags": ["english", "unanswerable"], "returned": 5, "ranked": ["service-hours", "group-buy", "invoice-apply", "payment-methods", "webhook"], "top_score": -0.827, "answerable": false, "rep": 0, "latency_ms": 52.2, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r085", "split": "dev", "tags": ["english", "unanswerable"], "returned": 5, "ranked": ["delivery", "group-buy", "service-hours", "warranty", "enterprise-contract"], "top_score": -0.7681, "answerable": false, "rep": 0, "latency_ms": 45.5, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r086", "split": "test", "tags": ["english", "unanswerable"], "returned": 5, "ranked": ["affiliate", "payment-methods", "presale", "invoice-apply", "invoice-change"], "top_score": -0.4311, "answerable": false, "rep": 0, "latency_ms": 44.6, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r088", "split": "dev", "tags": ["english", "unanswerable"], "returned": 5, "ranked": ["webhook", "app-install", "payment-methods", "affiliate", "order-query"], "top_score": -0.8086, "answerable": false, "rep": 0, "latency_ms": 46.0, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []},
+    {"id": "en-r090", "split": "test", "tags": ["english", "unanswerable"], "returned": 5, "ranked": ["upload-export", "webhook", "app-install", "payment-methods", "sub-accounts"], "top_score": -0.6214, "answerable": false, "rep": 0, "latency_ms": 19.5, "llm_errors": [], "llm_calls": 0, "input_tokens": 0, "output_tokens": 0, "served": []}
+  ]
+}

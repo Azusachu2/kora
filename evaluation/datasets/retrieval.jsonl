@@ -1,0 +1,93 @@
+{"id": "r001", "query": "退货的快递费是我出还是你们出", "relevant": ["refund-policy"], "answer": ["退货运费由用户承担"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r002", "query": "买了快一个月了，东西坏的还能退吗", "relevant": ["refund-policy"], "answer": ["需要提供商品质量问题的证据才能退款"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r003", "query": "钱退到信用卡上怎么没看到余额变多", "relevant": ["refund-arrival"], "answer": ["信用卡退款体现为当期账单抵扣"], "tags": ["paraphrase"], "split": "test"}
+{"id": "r004", "query": "用礼品卡买的东西退了，钱去哪了", "relevant": ["refund-arrival"], "answer": ["礼品卡支付的部分退回礼品卡余额"], "tags": ["distractor"], "split": "dev"}
+{"id": "r005", "query": "网课看了一半能退不", "relevant": ["virtual-refund"], "answer": ["已学习进度超过 20% 的课程不予退款"], "tags": ["paraphrase", "colloquial"], "split": "dev"}
+{"id": "r006", "query": "直播课开始前一天不想上了", "relevant": ["virtual-refund"], "answer": ["直播课开课前 24 小时可全额退款"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r007", "query": "鞋子大了想换小一码", "relevant": ["exchange"], "answer": ["需在签收后 15 天内申请"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r008", "query": "买完第三天就降价了，亏了", "relevant": ["price-protect"], "answer": ["签收后 7 天内，同一商品在本平台降价可申请价保"], "tags": ["paraphrase", "colloquial"], "split": "dev"}
+{"id": "r009", "query": "秒杀买的后来又便宜了给补差吗", "relevant": ["price-protect"], "answer": ["秒杀、拼团、清仓商品不参与价保"], "tags": ["distractor"], "split": "dev"}
+{"id": "r010", "query": "专票要准备哪些材料", "relevant": ["invoice-apply"], "answer": ["开户行及账号"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r011", "query": "十几个订单能开成一张票吗", "relevant": ["invoice-apply"], "answer": ["最多合并 20 笔"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r012", "query": "票开错了公司名怎么办", "relevant": ["invoice-change"], "answer": ["抬头、税号错误可以重开"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r013", "query": "去年的发票想改", "relevant": ["invoice-change"], "answer": ["跨月发票需财务人工审核"], "tags": ["paraphrase"], "split": "test"}
+{"id": "r014", "query": "公司打款要写什么备注", "relevant": ["payment-methods"], "answer": ["对公转账需备注订单号"], "tags": ["paraphrase"], "split": "test"}
+{"id": "r015", "query": "可以收到货再给钱吗", "relevant": ["payment-methods"], "answer": ["货到付款仅限同城配送订单"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r016", "query": "手机收到两条扣钱的短信", "relevant": ["duplicate-charge"], "answer": ["其中一条通常为预授权"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r017", "query": "钱扣了没看到单子", "relevant": ["duplicate-charge"], "answer": ["未生成订单的扣款会在核对后退回"], "tags": ["paraphrase", "colloquial"], "split": "dev"}
+{"id": "r018", "query": "不想每个月自动扣会员钱", "relevant": ["subscription"], "answer": ["扣费服务中同时解约"], "tags": ["paraphrase"], "split": "test"}
+{"id": "r019", "query": "关掉续费后现在还能用吗", "relevant": ["subscription"], "answer": ["关闭后当前周期权益保留到期满"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r020", "query": "满减和会员折扣可以一起用不", "relevant": ["coupons"], "answer": ["满减券与会员折扣不叠加"], "tags": ["lexical"], "split": "dev"}
+{"id": "r021", "query": "退了一件东西，券还给我吗", "relevant": ["coupons"], "answer": ["部分退款不退券"], "tags": ["distractor"], "split": "test"}
+{"id": "r022", "query": "购物卡能换成现金吗", "relevant": ["giftcard"], "answer": ["不找零、不提现"], "tags": ["paraphrase"], "split": "test"}
+{"id": "r023", "query": "快递三天不动了", "relevant": ["lost-parcel"], "answer": ["物流超过 72 小时没有更新"], "tags": ["paraphrase", "colloquial"], "split": "test"}
+{"id": "r024", "query": "说签收了我没拿到", "relevant": ["lost-parcel"], "answer": ["再在 48 小时内联系客服发起签收核查"], "tags": ["paraphrase"], "split": "test"}
+{"id": "r025", "query": "箱子破了要不要收", "relevant": ["lost-parcel"], "answer": ["外包装破损请当面拒收并拍照"], "tags": ["paraphrase"], "split": "test"}
+{"id": "r026", "query": "能寄到东京吗", "relevant": ["international"], "answer": ["新加坡、马来西亚和日本"], "tags": ["paraphrase"], "split": "test"}
+{"id": "r027", "query": "寄到新加坡要交税吗", "relevant": ["international"], "answer": ["关税由收件人承担"], "tags": ["lexical"], "split": "test"}
+{"id": "r028", "query": "已经发出来了还能取消吗", "relevant": ["modify-order"], "answer": ["已发货订单不能取消"], "tags": ["distractor"], "split": "test"}
+{"id": "r029", "query": "尺寸选错了但还没发货", "relevant": ["modify-order"], "answer": ["商品规格不能直接修改，需取消后重新下单"], "tags": ["distractor"], "split": "dev"}
+{"id": "r030", "query": "定金可以退吗", "relevant": ["presale"], "answer": ["定金不退"], "tags": ["distractor"], "split": "dev"}
+{"id": "r031", "query": "说好 10 号发货现在还没发，有赔偿吗", "relevant": ["presale"], "answer": ["每天补偿订单金额的 1%"], "tags": ["paraphrase"], "split": "test"}
+{"id": "r032", "query": "账号删掉后悔了怎么办", "relevant": ["account-cancel"], "answer": ["提交申请后有 15 天冷静期"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r033", "query": "销号了以前攒的分还在吗", "relevant": ["account-cancel"], "answer": ["注销后积分、优惠券和订单记录无法恢复"], "tags": ["distractor"], "split": "test"}
+{"id": "r034", "query": "名字认证填错字", "relevant": ["realname"], "answer": ["姓名填错可在 30 天内修改一次"], "tags": ["lexical"], "split": "dev"}
+{"id": "r035", "query": "以前的号停机了怎么换绑", "relevant": ["bind-phone"], "answer": ["申诉 1-3 个工作日处理"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r036", "query": "刚换完手机号提不了现", "relevant": ["bind-phone"], "answer": ["更换后 24 小时内限制提现"], "tags": ["distractor"], "split": "test"}
+{"id": "r037", "query": "员工走了他的号怎么处理", "relevant": ["sub-accounts"], "answer": ["人员离职后应及时停用其子账号"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r038", "query": "接口老返回 429", "relevant": ["api-limits"], "answer": ["默认限流每分钟 60 次"], "tags": ["lexical"], "split": "dev"}
+{"id": "r039", "query": "密钥多久过期", "relevant": ["api-limits"], "answer": ["有效期 180 天"], "tags": ["lexical"], "split": "dev"}
+{"id": "r040", "query": "回调一直收不到，服务部署在内网", "relevant": ["webhook"], "answer": ["内网地址和自签名证书不会被回调"], "tags": ["lexical"], "split": "test"}
+{"id": "r041", "query": "表格导出来全是问号", "relevant": ["upload-export"], "answer": ["从文本导入并选择 UTF-8"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r042", "query": "300 兆的文件传不上去", "relevant": ["upload-export"], "answer": ["单个文件上限 200MB"], "tags": ["paraphrase"], "split": "test"}
+{"id": "r043", "query": "音箱搜不到怎么弄", "relevant": ["bluetooth"], "answer": ["长按电源键 5 秒至蓝灯闪烁"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r044", "query": "晚上怎么不给我发提醒", "relevant": ["notifications"], "answer": ["免打扰时段默认 22:00-8:00"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r045", "query": "手机进水了保不保", "relevant": ["warranty"], "answer": ["进水、私自拆修不在质保范围"], "tags": ["lexical"], "split": "test"}
+{"id": "r046", "query": "电池保多久", "relevant": ["warranty"], "answer": ["电池等易耗品质保 6 个月"], "tags": ["lexical"], "split": "dev"}
+{"id": "r047", "query": "空调装一下要钱吗", "relevant": ["installation"], "answer": ["基础安装免费"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r048", "query": "半夜有人工吗", "relevant": ["service-hours"], "answer": ["人工在线客服 9:00-21:00"], "tags": ["paraphrase"], "split": "test"}
+{"id": "r049", "query": "100 分能顶几块钱", "relevant": ["membership-points"], "answer": ["100 积分 = 1 元"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r050", "query": "买到多少能升金卡", "relevant": ["membership-points"], "answer": ["金卡会员（累计消费 5000 元）"], "tags": ["lexical"], "split": "dev"}
+{"id": "r051", "query": "急用，最快几天能到", "relevant": ["delivery"], "answer": ["1-2 个工作日送达"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r052", "query": "多少钱包邮", "relevant": ["delivery"], "answer": ["订单满 99 元"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r053", "query": "有人在外地登我号了", "relevant": ["account-security"], "answer": ["系统会自动锁定账户并发送通知"], "tags": ["paraphrase"], "split": "test"}
+{"id": "r054", "query": "客服找我要密码正常吗", "relevant": ["account-security"], "answer": ["客服人员不会索要用户密码"], "tags": ["lexical"], "split": "test"}
+{"id": "r055", "query": "登录一直 401 进不去", "relevant": ["tech-troubleshooting"], "answer": ["登录失败 401 错误：表示认证失败"], "tags": ["distractor"], "split": "dev"}
+{"id": "r056", "query": "App 老闪退", "relevant": ["tech-troubleshooting"], "answer": ["请尝试清除缓存后重启应用"], "tags": ["paraphrase"], "split": "dev"}
+{"id": "r057", "query": "老旧安卓机装得上吗", "relevant": ["app-install"], "answer": ["Android 9 及以上"], "tags": ["paraphrase"], "split": "test"}
+{"id": "r058", "query": "开店要交多少押金，能退吗", "relevant": ["seller-onboarding"], "answer": ["退店后 90 天内退还"], "tags": ["distractor"], "split": "dev"}
+{"id": "r059", "query": "凑不满人怎么办", "relevant": ["group-buy"], "answer": ["未成团自动退款"], "tags": ["paraphrase"], "split": "test"}
+{"id": "r060", "query": "写好的评论还能改吗", "relevant": ["reviews"], "answer": ["评价提交后可修改一次"], "tags": ["paraphrase"], "split": "test"}
+{"id": "r061", "query": "how long does a refund take", "relevant": ["refund-policy", "refund-arrival"], "answer": ["5-7 个工作日内退回原支付账户"], "tags": ["english"], "split": "test"}
+{"id": "r062", "query": "do you ship to Malaysia", "relevant": ["international"], "answer": ["新加坡、马来西亚和日本"], "tags": ["english"], "split": "dev"}
+{"id": "r063", "query": "how to turn off auto renewal", "relevant": ["subscription"], "answer": ["可在会员中心关闭"], "tags": ["english"], "split": "test"}
+{"id": "r064", "query": "is water damage covered by warranty", "relevant": ["warranty"], "answer": ["进水、私自拆修不在质保范围"], "tags": ["english"], "split": "dev"}
+{"id": "r065", "query": "发票台头怎么改", "relevant": ["invoice-change"], "answer": ["抬头、税号错误可以重开"], "tags": ["typo"], "split": "dev"}
+{"id": "r066", "query": "退宽多久到帐", "relevant": ["refund-policy", "refund-arrival"], "answer": ["5-7 个工作日内退回原支付账户"], "tags": ["typo"], "split": "test"}
+{"id": "r067", "query": "物留一直没更新", "relevant": ["lost-parcel"], "answer": ["物流超过 72 小时没有更新"], "tags": ["typo"], "split": "dev"}
+{"id": "r068", "query": "退货能不能直接把快递单贴鞋盒上", "relevant": ["returns-howto"], "answer": ["不能直接在鞋盒上粘贴快递单"], "tags": ["long_doc"], "split": "dev"}
+{"id": "r069", "query": "运费险最多赔多少", "relevant": ["returns-howto"], "answer": ["运费险最高赔付 25 元"], "tags": ["long_doc"], "split": "dev"}
+{"id": "r070", "query": "赠品弄丢了退款会扣钱吗", "relevant": ["returns-howto"], "answer": ["缺少赠品会按赠品标价从退款中扣除"], "tags": ["long_doc"], "split": "test"}
+{"id": "r071", "query": "退货寄到付行不行", "relevant": ["returns-howto"], "answer": ["到付包裹会被拒收"], "tags": ["long_doc"], "split": "dev"}
+{"id": "r072", "query": "账期最长能给多少天", "relevant": ["enterprise-contract"], "answer": ["账期最长 45 天"], "tags": ["long_doc"], "split": "test"}
+{"id": "r073", "query": "合同没续签，数据还能留多久", "relevant": ["enterprise-contract"], "answer": ["未续签的服务到期后保留数据 60 天"], "tags": ["long_doc"], "split": "test"}
+{"id": "r074", "query": "减少席位什么时候生效", "relevant": ["enterprise-contract"], "answer": ["减少席位在下一个计费周期生效"], "tags": ["long_doc"], "split": "dev"}
+{"id": "r075", "query": "跟客服的聊天记录你们存多久", "relevant": ["privacy"], "answer": ["聊天记录保存 180 天"], "tags": ["long_doc"], "split": "dev"}
+{"id": "r076", "query": "怎么关掉猜你喜欢", "relevant": ["privacy"], "answer": ["可以在设置的隐私中关闭个性化推荐"], "tags": ["long_doc", "paraphrase"], "split": "test"}
+{"id": "r077", "query": "想要一份你们收集的我的资料", "relevant": ["privacy"], "answer": ["您可以在安全中心下载个人信息副本"], "tags": ["long_doc", "paraphrase"], "split": "dev"}
+{"id": "r078", "query": "退货怎么操作，退的钱多久能到", "relevant": ["returns-howto", "refund-policy"], "answer": ["点击申请售后", "5-7 个工作日内退回原支付账户"], "tags": ["multi_doc"], "split": "dev"}
+{"id": "r079", "query": "换手机号和注销账号分别要什么条件", "relevant": ["bind-phone", "account-cancel"], "answer": ["原手机号停用的，需通过人脸核验或申诉", "注销前需结清订单、余额和未到期会员"], "tags": ["multi_doc"], "split": "dev"}
+{"id": "r080", "query": "会员怎么升级，自动续费怎么关", "relevant": ["membership-points", "subscription"], "answer": ["银卡会员（累计消费 1000 元）", "可在会员中心关闭"], "tags": ["multi_doc"], "split": "test"}
+{"id": "r081", "query": "接口报 401 和 403 有什么区别", "relevant": ["api-limits", "sub-accounts"], "answer": ["过期返回 401", "403 权限不足通常是角色未授权"], "tags": ["multi_doc"], "split": "dev"}
+{"id": "r082", "query": "你们老板叫什么", "relevant": [], "answer": [], "tags": ["unanswerable"], "split": "test"}
+{"id": "r083", "query": "门店有停车位吗", "relevant": [], "answer": [], "tags": ["unanswerable"], "split": "dev"}
+{"id": "r084", "query": "你们招前端工程师吗", "relevant": [], "answer": [], "tags": ["unanswerable"], "split": "test"}
+{"id": "r085", "query": "明天会下雨吗", "relevant": [], "answer": [], "tags": ["unanswerable"], "split": "dev"}
+{"id": "r086", "query": "你们的股票代码是多少", "relevant": [], "answer": [], "tags": ["unanswerable"], "split": "test"}
+{"id": "r087", "query": "帮我写一份简历", "relevant": [], "answer": [], "tags": ["unanswerable"], "split": "dev"}
+{"id": "r088", "query": "附近哪有充电桩", "relevant": [], "answer": [], "tags": ["unanswerable"], "split": "dev"}
+{"id": "r089", "query": "这个颜色适合黄皮吗", "relevant": [], "answer": [], "tags": ["unanswerable"], "split": "test"}
+{"id": "r090", "query": "你们后端用的什么数据库", "relevant": [], "answer": [], "tags": ["unanswerable"], "split": "test"}
+{"id": "r091", "query": "送女朋友什么礼物好", "relevant": [], "answer": [], "tags": ["unanswerable"], "split": "dev"}
+{"id": "r092", "query": "客服小王今天上班吗", "relevant": [], "answer": [], "tags": ["unanswerable"], "split": "dev"}
+{"id": "r093", "query": "旧手机以旧换新能抵多少", "relevant": [], "answer": [], "tags": ["unanswerable"], "split": "dev"}

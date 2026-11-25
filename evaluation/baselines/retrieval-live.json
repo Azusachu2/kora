@@ -1,0 +1,231 @@
+{
+  "suite": "retrieval",
+  "mode": "live",
+  "split": "all",
+  "reps": 1,
+  "cases": 93,
+  "dataset": "5fff3d4b128a4979",
+  "status": "complete",
+  "model_mismatches": [],
+  "timestamp": "2026-11-24T03:09:09",
+  "git": "4ee28fa-dirty",
+  "config": {
+    "model": "claude-opus-5-5",
+    "concurrency": 4,
+    "limit": 0,
+    "chunks": 43
+  },
+  "metrics": {
+    "hit1": {
+      "rate": 0.6543,
+      "n": 81,
+      "ci95": [
+        0.5459,
+        0.7488
+      ]
+    },
+    "hit3": {
+      "rate": 0.6667,
+      "n": 81,
+      "ci95": [
+        0.5585,
+        0.7597
+      ]
+    },
+    "hit5": {
+      "rate": 0.6667,
+      "n": 81,
+      "ci95": [
+        0.5585,
+        0.7597
+      ]
+    },
+    "answer5": {
+      "rate": 0.6173,
+      "n": 81,
+      "ci95": [
+        0.5084,
+        0.7155
+      ]
+    },
+    "recall5": 0.6543,
+    "mrr5": 0.6605,
+    "unanswerable": {
+      "n": 12,
+      "returned_any": 12,
+      "top_score_auc": 0.4877,
+      "top_score_p50": {
+        "answerable": 0.3266,
+        "unanswerable": 0.3342
+      }
+    },
+    "errors": {},
+    "llm_errors": {},
+    "by_split": {
+      "dev": {
+        "hit1": 0.6327,
+        "hit5": 0.6531,
+        "n": 49
+      },
+      "test": {
+        "hit1": 0.6875,
+        "hit5": 0.6875,
+        "n": 32
+      }
+    },
+    "by_tag": {
+      "colloquial": {
+        "hit1": 0.75,
+        "hit5": 0.75,
+        "answer5": 0.75,
+        "n": 4
+      },
+      "distractor": {
+        "hit1": 0.9,
+        "hit5": 0.9,
+        "answer5": 0.9,
+        "n": 10
+      },
+      "english": {
+        "hit1": 0.75,
+        "hit5": 0.75,
+        "answer5": 0.75,
+        "n": 4
+      },
+      "lexical": {
+        "hit1": 1.0,
+        "hit5": 1.0,
+        "answer5": 1.0,
+        "n": 10
+      },
+      "long_doc": {
+        "hit1": 0.2,
+        "hit5": 0.2,
+        "answer5": 0.0,
+        "n": 10
+      },
+      "multi_doc": {
+        "hit1": 0.75,
+        "hit5": 1.0,
+        "answer5": 0.5,
+        "n": 4
+      },
+      "paraphrase": {
+        "hit1": 0.5952,
+        "hit5": 0.5952,
+        "answer5": 0.5952,
+        "n": 42
+      },
+      "typo": {
+        "hit1": 0.3333,
+        "hit5": 0.3333,
+        "answer5": 0.3333,
+        "n": 3
+      }
+    },
+    "latency_ms": {
+      "p50": 4520.6,
+      "p95": 5937.1,
+      "max": 6618.5
+    },
+    "llm_calls": 186,
+    "llm_calls_per_case": 2.0,
+    "input_tokens": 196087,
+    "output_tokens": 27604
+  },
+  "rows": [
+    {"id": "r001", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["exchange", "modify-order", "refund-arrival", "delivery", "order-query"], "top_score": 0.3737, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4785.4, "llm_errors": [], "llm_calls": 2, "input_tokens": 2405, "output_tokens": 282, "served": ["claude-opus-5-5"]},
+    {"id": "r002", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["refund-policy", "exchange", "modify-order", "international", "coupons"], "top_score": 0.4315, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 6524.5, "llm_errors": [], "llm_calls": 2, "input_tokens": 2638, "output_tokens": 473, "served": ["claude-opus-5-5"]},
+    {"id": "r003", "split": "test", "tags": ["paraphrase"], "returned": 5, "ranked": ["refund-arrival", "modify-order", "payment-methods", "account-cancel", "lost-parcel"], "top_score": 0.2912, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 5016.8, "llm_errors": [], "llm_calls": 2, "input_tokens": 2310, "output_tokens": 324, "served": ["claude-opus-5-5"]},
+    {"id": "r004", "split": "dev", "tags": ["distractor"], "returned": 5, "ranked": ["modify-order", "coupons", "group-buy", "account-cancel", "lost-parcel"], "top_score": 0.1326, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4335.9, "llm_errors": [], "llm_calls": 2, "input_tokens": 2471, "output_tokens": 293, "served": ["claude-opus-5-5"]},
+    {"id": "r005", "split": "dev", "tags": ["paraphrase", "colloquial"], "returned": 5, "ranked": ["virtual-refund", "modify-order", "giftcard", "coupons", "presale"], "top_score": 0.3266, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 3937.3, "llm_errors": [], "llm_calls": 2, "input_tokens": 2563, "output_tokens": 311, "served": ["claude-opus-5-5"]},
+    {"id": "r006", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["virtual-refund", "modify-order", "subscription", "account-cancel", "exchange"], "top_score": 0.4076, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 2798.9, "llm_errors": [], "llm_calls": 2, "input_tokens": 2080, "output_tokens": 175, "served": ["claude-opus-5-5"]},
+    {"id": "r007", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["exchange", "modify-order", "lost-parcel", "coupons", "group-buy"], "top_score": 0.2616, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 1936.3, "llm_errors": [], "llm_calls": 2, "input_tokens": 1927, "output_tokens": 98, "served": ["claude-opus-5-5"]},
+    {"id": "r008", "split": "dev", "tags": ["paraphrase", "colloquial"], "returned": 5, "ranked": ["price-protect", "exchange", "modify-order", "order-query", "reviews"], "top_score": 0.5117, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4724.3, "llm_errors": [], "llm_calls": 2, "input_tokens": 2838, "output_tokens": 340, "served": ["claude-opus-5-5"]},
+    {"id": "r009", "split": "dev", "tags": ["distractor"], "returned": 5, "ranked": ["price-protect", "exchange", "group-buy", "modify-order", "warranty"], "top_score": 0.5067, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 2367.8, "llm_errors": [], "llm_calls": 2, "input_tokens": 2172, "output_tokens": 118, "served": ["claude-opus-5-5"]},
+    {"id": "r010", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["invoice-change", "sub-accounts", "payment-methods", "service-hours", "account-cancel"], "top_score": 0.4159, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 5398.6, "llm_errors": [], "llm_calls": 2, "input_tokens": 2572, "output_tokens": 434, "served": ["claude-opus-5-5"]},
+    {"id": "r011", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["coupons", "price-protect", "seller-onboarding", "affiliate", "account-cancel"], "top_score": 0.27, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4908.7, "llm_errors": [], "llm_calls": 2, "input_tokens": 1922, "output_tokens": 441, "served": ["claude-opus-5-5"]},
+    {"id": "r012", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["invoice-change", "invoice-apply", "service-hours", "order-query", "payment-methods"], "top_score": 0.42, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4658.2, "llm_errors": [], "llm_calls": 2, "input_tokens": 2299, "output_tokens": 281, "served": ["claude-opus-5-5"]},
+    {"id": "r013", "split": "test", "tags": ["paraphrase"], "returned": 5, "ranked": ["modify-order", "realname", "enterprise-contract", "refund-policy", "warranty"], "top_score": 0.2352, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 5818.4, "llm_errors": [], "llm_calls": 2, "input_tokens": 1760, "output_tokens": 396, "served": ["claude-opus-5-5"]},
+    {"id": "r014", "split": "test", "tags": ["paraphrase"], "returned": 5, "ranked": ["payment-methods", "invoice-apply", "enterprise-contract", "seller-onboarding", "modify-order"], "top_score": 0.3787, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 3778.5, "llm_errors": [], "llm_calls": 2, "input_tokens": 1910, "output_tokens": 225, "served": ["claude-opus-5-5"]},
+    {"id": "r015", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["modify-order", "lost-parcel", "group-buy", "exchange", "installation"], "top_score": 0.2092, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 3679.2, "llm_errors": [], "llm_calls": 2, "input_tokens": 1725, "output_tokens": 200, "served": ["claude-opus-5-5"]},
+    {"id": "r016", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["subscription", "payment-methods", "refund-arrival", "notifications", "account-cancel"], "top_score": 0.1828, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 3209.2, "llm_errors": [], "llm_calls": 2, "input_tokens": 2117, "output_tokens": 191, "served": ["claude-opus-5-5"]},
+    {"id": "r017", "split": "dev", "tags": ["paraphrase", "colloquial"], "returned": 5, "ranked": ["order-query", "tech-troubleshooting", "refund-policy", "modify-order", "group-buy"], "top_score": 0.2751, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4608.0, "llm_errors": [], "llm_calls": 2, "input_tokens": 2522, "output_tokens": 350, "served": ["claude-opus-5-5"]},
+    {"id": "r018", "split": "test", "tags": ["paraphrase"], "returned": 5, "ranked": ["subscription", "virtual-refund", "account-cancel", "payment-methods", "coupons"], "top_score": 0.3306, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 3924.8, "llm_errors": [], "llm_calls": 2, "input_tokens": 2281, "output_tokens": 309, "served": ["claude-opus-5-5"]},
+    {"id": "r019", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["subscription", "membership-points", "account-cancel", "giftcard", "coupons"], "top_score": 0.3419, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 3408.0, "llm_errors": [], "llm_calls": 2, "input_tokens": 2481, "output_tokens": 279, "served": ["claude-opus-5-5"]},
+    {"id": "r020", "split": "dev", "tags": ["lexical"], "returned": 5, "ranked": ["coupons", "price-protect", "subscription", "virtual-refund", "account-cancel"], "top_score": 0.4936, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 3909.0, "llm_errors": [], "llm_calls": 2, "input_tokens": 1804, "output_tokens": 236, "served": ["claude-opus-5-5"]},
+    {"id": "r021", "split": "test", "tags": ["distractor"], "returned": 5, "ranked": ["coupons", "modify-order", "price-protect", "exchange", "membership-points"], "top_score": 0.3334, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4885.6, "llm_errors": [], "llm_calls": 2, "input_tokens": 2686, "output_tokens": 393, "served": ["claude-opus-5-5"]},
+    {"id": "r022", "split": "test", "tags": ["paraphrase"], "returned": 5, "ranked": ["payment-methods", "account-cancel", "refund-policy", "affiliate", "price-protect"], "top_score": 0.4389, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 5930.6, "llm_errors": [], "llm_calls": 2, "input_tokens": 2404, "output_tokens": 336, "served": ["claude-opus-5-5"]},
+    {"id": "r023", "split": "test", "tags": ["paraphrase", "colloquial"], "returned": 5, "ranked": ["lost-parcel", "modify-order", "returns-howto", "exchange", "refund-arrival"], "top_score": 0.5703, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4765.1, "llm_errors": [], "llm_calls": 2, "input_tokens": 2603, "output_tokens": 325, "served": ["claude-opus-5-5"]},
+    {"id": "r024", "split": "test", "tags": ["paraphrase"], "returned": 5, "ranked": ["lost-parcel", "order-query", "modify-order", "international", "price-protect"], "top_score": 0.3091, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 5081.8, "llm_errors": [], "llm_calls": 2, "input_tokens": 2492, "output_tokens": 396, "served": ["claude-opus-5-5"]},
+    {"id": "r025", "split": "test", "tags": ["paraphrase"], "returned": 5, "ranked": ["lost-parcel", "exchange", "modify-order", "group-buy", "coupons"], "top_score": 0.3107, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 3902.2, "llm_errors": [], "llm_calls": 2, "input_tokens": 2252, "output_tokens": 211, "served": ["claude-opus-5-5"]},
+    {"id": "r026", "split": "test", "tags": ["paraphrase"], "returned": 5, "ranked": ["international", "delivery", "group-buy", "exchange", "price-protect"], "top_score": 0.1699, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4401.3, "llm_errors": [], "llm_calls": 2, "input_tokens": 1611, "output_tokens": 301, "served": ["claude-opus-5-5"]},
+    {"id": "r027", "split": "test", "tags": ["lexical"], "returned": 5, "ranked": ["international", "modify-order", "price-protect", "group-buy", "installation"], "top_score": 0.2889, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 6618.5, "llm_errors": [], "llm_calls": 2, "input_tokens": 1924, "output_tokens": 459, "served": ["claude-opus-5-5"]},
+    {"id": "r028", "split": "test", "tags": ["distractor"], "returned": 5, "ranked": ["modify-order", "exchange", "group-buy", "service-hours", "price-protect"], "top_score": 0.1356, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4978.0, "llm_errors": [], "llm_calls": 2, "input_tokens": 2126, "output_tokens": 355, "served": ["claude-opus-5-5"]},
+    {"id": "r029", "split": "dev", "tags": ["distractor"], "returned": 5, "ranked": ["modify-order", "group-buy", "service-hours", "lost-parcel", "invoice-apply"], "top_score": 0.1411, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4580.3, "llm_errors": [], "llm_calls": 2, "input_tokens": 2280, "output_tokens": 324, "served": ["claude-opus-5-5"]},
+    {"id": "r030", "split": "dev", "tags": ["distractor"], "returned": 5, "ranked": ["presale", "seller-onboarding", "affiliate", "payment-methods", "invoice-change"], "top_score": 0.4497, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 3498.0, "llm_errors": [], "llm_calls": 2, "input_tokens": 1174, "output_tokens": 301, "served": ["claude-opus-5-5"]},
+    {"id": "r031", "split": "test", "tags": ["paraphrase"], "returned": 5, "ranked": ["modify-order", "order-query", "lost-parcel", "price-protect", "coupons"], "top_score": 0.2988, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4400.1, "llm_errors": [], "llm_calls": 2, "input_tokens": 2579, "output_tokens": 302, "served": ["claude-opus-5-5"]},
+    {"id": "r032", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["bind-phone", "service-hours", "sub-accounts", "realname", "modify-order"], "top_score": 0.5804, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4827.9, "llm_errors": [], "llm_calls": 2, "input_tokens": 2077, "output_tokens": 369, "served": ["claude-opus-5-5"]},
+    {"id": "r033", "split": "test", "tags": ["distractor"], "returned": 5, "ranked": ["account-cancel", "enterprise-contract", "coupons", "subscription", "price-protect"], "top_score": 0.3689, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 3179.1, "llm_errors": [], "llm_calls": 2, "input_tokens": 1766, "output_tokens": 193, "served": ["claude-opus-5-5"]},
+    {"id": "r034", "split": "dev", "tags": ["lexical"], "returned": 5, "ranked": ["realname", "invoice-apply", "seller-onboarding", "account-cancel", "payment-methods"], "top_score": 0.3487, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 5234.5, "llm_errors": [], "llm_calls": 2, "input_tokens": 1637, "output_tokens": 392, "served": ["claude-opus-5-5"]},
+    {"id": "r035", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["bind-phone", "account-security", "notifications", "modify-order", "account-cancel"], "top_score": 0.5052, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4520.6, "llm_errors": [], "llm_calls": 2, "input_tokens": 1652, "output_tokens": 203, "served": ["claude-opus-5-5"]},
+    {"id": "r036", "split": "test", "tags": ["distractor"], "returned": 5, "ranked": ["bind-phone", "account-security", "giftcard", "notifications", "seller-onboarding"], "top_score": 0.3084, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4968.9, "llm_errors": [], "llm_calls": 2, "input_tokens": 1777, "output_tokens": 378, "served": ["claude-opus-5-5"]},
+    {"id": "r037", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["bind-phone", "account-cancel", "account-security", "tech-troubleshooting", "notifications"], "top_score": 0.1798, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 5249.7, "llm_errors": [], "llm_calls": 2, "input_tokens": 2305, "output_tokens": 351, "served": ["claude-opus-5-5"]},
+    {"id": "r038", "split": "dev", "tags": ["lexical"], "returned": 5, "ranked": ["api-limits", "tech-troubleshooting", "webhook", "sub-accounts", "account-security"], "top_score": 0.1244, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 2800.6, "llm_errors": [], "llm_calls": 2, "input_tokens": 2129, "output_tokens": 141, "served": ["claude-opus-5-5"]},
+    {"id": "r039", "split": "dev", "tags": ["lexical"], "returned": 5, "ranked": ["api-limits", "giftcard", "coupons", "enterprise-contract", "bind-phone"], "top_score": 0.3232, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 3761.8, "llm_errors": [], "llm_calls": 2, "input_tokens": 2218, "output_tokens": 225, "served": ["claude-opus-5-5"]},
+    {"id": "r040", "split": "test", "tags": ["lexical"], "returned": 5, "ranked": ["webhook", "api-limits", "notifications", "enterprise-contract", "payment-methods"], "top_score": 0.309, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 6506.3, "llm_errors": [], "llm_calls": 2, "input_tokens": 2423, "output_tokens": 393, "served": ["claude-opus-5-5"]},
+    {"id": "r041", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["upload-export", "tech-troubleshooting", "enterprise-contract", "api-limits", "account-cancel"], "top_score": 0.1736, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 2213.3, "llm_errors": [], "llm_calls": 2, "input_tokens": 1993, "output_tokens": 126, "served": ["claude-opus-5-5"]},
+    {"id": "r042", "split": "test", "tags": ["paraphrase"], "returned": 5, "ranked": ["upload-export", "api-limits", "enterprise-contract", "notifications", "installation"], "top_score": 0.3586, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 2900.5, "llm_errors": [], "llm_calls": 2, "input_tokens": 1912, "output_tokens": 170, "served": ["claude-opus-5-5"]},
+    {"id": "r043", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["warranty", "tech-troubleshooting", "notifications", "exchange", "returns-howto"], "top_score": 0.285, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4551.3, "llm_errors": [], "llm_calls": 2, "input_tokens": 2759, "output_tokens": 384, "served": ["claude-opus-5-5"]},
+    {"id": "r044", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["notifications", "subscription", "tech-troubleshooting", "account-security", "installation"], "top_score": 0.3534, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4146.5, "llm_errors": [], "llm_calls": 2, "input_tokens": 2567, "output_tokens": 325, "served": ["claude-opus-5-5"]},
+    {"id": "r045", "split": "test", "tags": ["lexical"], "returned": 5, "ranked": ["warranty", "exchange", "price-protect", "installation", "bluetooth"], "top_score": 0.3528, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 3313.6, "llm_errors": [], "llm_calls": 2, "input_tokens": 1959, "output_tokens": 238, "served": ["claude-opus-5-5"]},
+    {"id": "r046", "split": "dev", "tags": ["lexical"], "returned": 5, "ranked": ["warranty", "bluetooth", "price-protect", "exchange", "seller-onboarding"], "top_score": 0.3185, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 2843.9, "llm_errors": [], "llm_calls": 2, "input_tokens": 1670, "output_tokens": 168, "served": ["claude-opus-5-5"]},
+    {"id": "r047", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["installation", "price-protect", "subscription", "enterprise-contract", "tech-troubleshooting"], "top_score": 0.1534, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 3944.6, "llm_errors": [], "llm_calls": 2, "input_tokens": 1505, "output_tokens": 211, "served": ["claude-opus-5-5"]},
+    {"id": "r048", "split": "test", "tags": ["paraphrase"], "returned": 5, "ranked": ["service-hours", "notifications", "lost-parcel", "duplicate-charge", "account-security"], "top_score": 0.3449, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 2329.4, "llm_errors": [], "llm_calls": 2, "input_tokens": 2299, "output_tokens": 139, "served": ["claude-opus-5-5"]},
+    {"id": "r049", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["membership-points", "reviews", "account-cancel", "coupons", "giftcard"], "top_score": 0.4901, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 5295.2, "llm_errors": [], "llm_calls": 2, "input_tokens": 2572, "output_tokens": 392, "served": ["claude-opus-5-5"]},
+    {"id": "r050", "split": "dev", "tags": ["lexical"], "returned": 5, "ranked": ["membership-points", "subscription", "coupons", "account-cancel", "affiliate"], "top_score": 0.5278, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4852.6, "llm_errors": [], "llm_calls": 2, "input_tokens": 1949, "output_tokens": 340, "served": ["claude-opus-5-5"]},
+    {"id": "r051", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["delivery", "international", "order-query", "installation", "group-buy"], "top_score": 0.5403, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4552.0, "llm_errors": [], "llm_calls": 2, "input_tokens": 2075, "output_tokens": 354, "served": ["claude-opus-5-5"]},
+    {"id": "r052", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["delivery", "exchange", "presale", "group-buy", "price-protect"], "top_score": 0.3372, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 5118.5, "llm_errors": [], "llm_calls": 2, "input_tokens": 2187, "output_tokens": 346, "served": ["claude-opus-5-5"]},
+    {"id": "r053", "split": "test", "tags": ["paraphrase"], "returned": 5, "ranked": ["tech-troubleshooting", "realname", "account-cancel", "api-limits", "duplicate-charge"], "top_score": 0.2607, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4816.6, "llm_errors": [], "llm_calls": 2, "input_tokens": 2583, "output_tokens": 364, "served": ["claude-opus-5-5"]},
+    {"id": "r054", "split": "test", "tags": ["lexical"], "returned": 5, "ranked": ["account-security", "bind-phone", "sub-accounts", "notifications", "account-cancel"], "top_score": 0.2323, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 2638.2, "llm_errors": [], "llm_calls": 2, "input_tokens": 2275, "output_tokens": 164, "served": ["claude-opus-5-5"]},
+    {"id": "r055", "split": "dev", "tags": ["distractor"], "returned": 5, "ranked": ["tech-troubleshooting", "bind-phone", "account-cancel", "notifications", "giftcard"], "top_score": 0.2006, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4014.9, "llm_errors": [], "llm_calls": 2, "input_tokens": 2276, "output_tokens": 324, "served": ["claude-opus-5-5"]},
+    {"id": "r056", "split": "dev", "tags": ["paraphrase"], "returned": 5, "ranked": ["tech-troubleshooting", "notifications", "bind-phone", "account-cancel", "modify-order"], "top_score": 0.3605, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 2680.0, "llm_errors": [], "llm_calls": 2, "input_tokens": 1911, "output_tokens": 196, "served": ["claude-opus-5-5"]},
+    {"id": "r057", "split": "test", "tags": ["paraphrase"], "returned": 5, "ranked": ["notifications", "installation", "account-security", "bind-phone", "sub-accounts"], "top_score": 0.5175, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4940.7, "llm_errors": [], "llm_calls": 2, "input_tokens": 1624, "output_tokens": 301, "served": ["claude-opus-5-5"]},
+    {"id": "r058", "split": "dev", "tags": ["distractor"], "returned": 5, "ranked": ["seller-onboarding", "presale", "affiliate", "payment-methods", "invoice-change"], "top_score": 0.585, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 3657.0, "llm_errors": [], "llm_calls": 2, "input_tokens": 1153, "output_tokens": 234, "served": ["claude-opus-5-5"]},
+    {"id": "r059", "split": "test", "tags": ["paraphrase"], "returned": 5, "ranked": ["group-buy", "modify-order", "service-hours", "coupons", "giftcard"], "top_score": 0.344, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 5985.3, "llm_errors": [], "llm_calls": 2, "input_tokens": 1776, "output_tokens": 432, "served": ["claude-opus-5-5"]},
+    {"id": "r060", "split": "test", "tags": ["paraphrase"], "returned": 5, "ranked": ["modify-order", "bind-phone", "group-buy", "installation", "account-cancel"], "top_score": 0.4086, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4574.7, "llm_errors": [], "llm_calls": 2, "input_tokens": 1771, "output_tokens": 311, "served": ["claude-opus-5-5"]},
+    {"id": "r061", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["refund-policy", "refund-arrival", "presale", "affiliate", "warranty"], "top_score": -0.7462, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4365.4, "llm_errors": [], "llm_calls": 2, "input_tokens": 2702, "output_tokens": 345, "served": ["claude-opus-5-5"]},
+    {"id": "r062", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["international", "delivery", "returns-howto", "order-query", "service-hours"], "top_score": -0.5031, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 2616.6, "llm_errors": [], "llm_calls": 2, "input_tokens": 1784, "output_tokens": 206, "served": ["claude-opus-5-5"]},
+    {"id": "r063", "split": "test", "tags": ["english"], "returned": 5, "ranked": ["enterprise-contract", "modify-order", "refund-policy", "giftcard", "invoice-change"], "top_score": -0.7439, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4826.7, "llm_errors": [], "llm_calls": 2, "input_tokens": 1520, "output_tokens": 316, "served": ["claude-opus-5-5"]},
+    {"id": "r064", "split": "dev", "tags": ["english"], "returned": 5, "ranked": ["warranty", "returns-howto", "returns-howto", "tech-troubleshooting", "presale"], "top_score": -0.8052, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 2218.4, "llm_errors": [], "llm_calls": 2, "input_tokens": 1993, "output_tokens": 130, "served": ["claude-opus-5-5"]},
+    {"id": "r065", "split": "dev", "tags": ["typo"], "returned": 5, "ranked": ["modify-order", "payment-methods", "service-hours", "order-query", "tech-troubleshooting"], "top_score": 0.2281, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4856.6, "llm_errors": [], "llm_calls": 2, "input_tokens": 2271, "output_tokens": 324, "served": ["claude-opus-5-5"]},
+    {"id": "r066", "split": "test", "tags": ["typo"], "returned": 5, "ranked": ["returns-howto", "modify-order", "seller-onboarding", "coupons", "subscription"], "top_score": 0.404, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4775.8, "llm_errors": [], "llm_calls": 2, "input_tokens": 2083, "output_tokens": 300, "served": ["claude-opus-5-5"]},
+    {"id": "r067", "split": "dev", "tags": ["typo"], "returned": 5, "ranked": ["lost-parcel", "international", "modify-order", "notifications", "tech-troubleshooting"], "top_score": 0.2271, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4550.0, "llm_errors": [], "llm_calls": 2, "input_tokens": 2138, "output_tokens": 336, "served": ["claude-opus-5-5"]},
+    {"id": "r068", "split": "dev", "tags": ["long_doc"], "returned": 5, "ranked": ["exchange", "modify-order", "coupons", "warranty", "giftcard"], "top_score": 0.4374, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 5302.2, "llm_errors": [], "llm_calls": 2, "input_tokens": 2621, "output_tokens": 469, "served": ["claude-opus-5-5"]},
+    {"id": "r069", "split": "dev", "tags": ["long_doc"], "returned": 5, "ranked": ["delivery", "presale", "coupons", "modify-order", "group-buy"], "top_score": 0.2682, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 5127.7, "llm_errors": [], "llm_calls": 2, "input_tokens": 1902, "output_tokens": 340, "served": ["claude-opus-5-5"]},
+    {"id": "r070", "split": "test", "tags": ["long_doc"], "returned": 5, "ranked": ["coupons", "modify-order", "presale", "group-buy", "affiliate"], "top_score": 0.5503, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4738.5, "llm_errors": [], "llm_calls": 2, "input_tokens": 2890, "output_tokens": 311, "served": ["claude-opus-5-5"]},
+    {"id": "r071", "split": "dev", "tags": ["long_doc"], "returned": 5, "ranked": ["exchange", "modify-order", "lost-parcel", "service-hours", "giftcard"], "top_score": 0.1717, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4388.6, "llm_errors": [], "llm_calls": 2, "input_tokens": 2124, "output_tokens": 310, "served": ["claude-opus-5-5"]},
+    {"id": "r072", "split": "test", "tags": ["long_doc"], "returned": 5, "ranked": ["enterprise-contract", "subscription", "refund-policy", "coupons", "account-cancel"], "top_score": 0.4654, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": false, "rep": 0, "latency_ms": 4694.9, "llm_errors": [], "llm_calls": 2, "input_tokens": 2168, "output_tokens": 256, "served": ["claude-opus-5-5"]},
+    {"id": "r073", "split": "test", "tags": ["long_doc"], "returned": 5, "ranked": ["enterprise-contract", "account-cancel", "subscription", "coupons", "modify-order"], "top_score": 0.3265, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": false, "rep": 0, "latency_ms": 4881.7, "llm_errors": [], "llm_calls": 2, "input_tokens": 1839, "output_tokens": 286, "served": ["claude-opus-5-5"]},
+    {"id": "r074", "split": "dev", "tags": ["long_doc"], "returned": 5, "ranked": ["subscription", "account-cancel", "modify-order", "api-limits", "duplicate-charge"], "top_score": 0.234, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 4740.3, "llm_errors": [], "llm_calls": 2, "input_tokens": 2080, "output_tokens": 368, "served": ["claude-opus-5-5"]},
+    {"id": "r075", "split": "dev", "tags": ["long_doc"], "returned": 5, "ranked": ["enterprise-contract", "account-cancel", "account-security", "notifications", "delivery"], "top_score": 0.5582, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 5047.3, "llm_errors": [], "llm_calls": 2, "input_tokens": 2029, "output_tokens": 336, "served": ["claude-opus-5-5"]},
+    {"id": "r076", "split": "test", "tags": ["long_doc", "paraphrase"], "returned": 5, "ranked": ["notifications", "service-hours", "account-cancel", "order-query", "modify-order"], "top_score": 0.3987, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 5171.4, "llm_errors": [], "llm_calls": 2, "input_tokens": 2069, "output_tokens": 358, "served": ["claude-opus-5-5"]},
+    {"id": "r077", "split": "dev", "tags": ["long_doc", "paraphrase"], "returned": 5, "ranked": ["account-cancel", "realname", "account-security", "enterprise-contract", "sub-accounts"], "top_score": 0.331, "answerable": true, "hit1": false, "hit3": false, "hit5": false, "recall5": 0.0, "mrr5": 0.0, "answer5": false, "rep": 0, "latency_ms": 5542.7, "llm_errors": [], "llm_calls": 2, "input_tokens": 2571, "output_tokens": 446, "served": ["claude-opus-5-5"]},
+    {"id": "r078", "split": "dev", "tags": ["multi_doc"], "returned": 5, "ranked": ["refund-policy", "modify-order", "coupons", "price-protect", "order-query"], "top_score": 0.163, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 0.5, "mrr5": 1.0, "answer5": false, "rep": 0, "latency_ms": 3868.6, "llm_errors": [], "llm_calls": 2, "input_tokens": 2306, "output_tokens": 261, "served": ["claude-opus-5-5"]},
+    {"id": "r079", "split": "dev", "tags": ["multi_doc"], "returned": 5, "ranked": ["bind-phone", "account-cancel", "account-security", "subscription", "giftcard"], "top_score": 0.3165, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 1.0, "answer5": true, "rep": 0, "latency_ms": 4423.1, "llm_errors": [], "llm_calls": 2, "input_tokens": 1810, "output_tokens": 314, "served": ["claude-opus-5-5"]},
+    {"id": "r080", "split": "test", "tags": ["multi_doc"], "returned": 5, "ranked": ["subscription", "account-cancel", "coupons", "account-security", "notifications"], "top_score": 0.3668, "answerable": true, "hit1": true, "hit3": true, "hit5": true, "recall5": 0.5, "mrr5": 1.0, "answer5": false, "rep": 0, "latency_ms": 3332.5, "llm_errors": [], "llm_calls": 2, "input_tokens": 1197, "output_tokens": 249, "served": ["claude-opus-5-5"]},
+    {"id": "r081", "split": "dev", "tags": ["multi_doc"], "returned": 5, "ranked": ["tech-troubleshooting", "sub-accounts", "api-limits", "webhook", "bind-phone"], "top_score": 0.242, "answerable": true, "hit1": false, "hit3": true, "hit5": true, "recall5": 1.0, "mrr5": 0.5, "answer5": true, "rep": 0, "latency_ms": 5937.1, "llm_errors": [], "llm_calls": 2, "input_tokens": 2491, "output_tokens": 462, "served": ["claude-opus-5-5"]},
+    {"id": "r082", "split": "test", "tags": ["unanswerable"], "returned": 5, "ranked": ["seller-onboarding", "service-hours", "invoice-apply", "payment-methods", "account-cancel"], "top_score": 0.3821, "answerable": false, "rep": 0, "latency_ms": 3586.7, "llm_errors": [], "llm_calls": 2, "input_tokens": 1743, "output_tokens": 274, "served": ["claude-opus-5-5"]},
+    {"id": "r083", "split": "dev", "tags": ["unanswerable"], "returned": 5, "ranked": ["installation", "service-hours", "modify-order", "giftcard", "group-buy"], "top_score": 0.1779, "answerable": false, "rep": 0, "latency_ms": 3122.7, "llm_errors": [], "llm_calls": 2, "input_tokens": 2262, "output_tokens": 230, "served": ["claude-opus-5-5"]},
+    {"id": "r084", "split": "test", "tags": ["unanswerable"], "returned": 5, "ranked": ["enterprise-contract", "installation", "invoice-apply", "payment-methods", "subscription"], "top_score": 0.4312, "answerable": false, "rep": 0, "latency_ms": 3965.3, "llm_errors": [], "llm_calls": 2, "input_tokens": 1472, "output_tokens": 238, "served": ["claude-opus-5-5"]},
+    {"id": "r085", "split": "dev", "tags": ["unanswerable"], "returned": 5, "ranked": ["delivery", "installation", "subscription", "api-limits", "account-cancel"], "top_score": 0.3572, "answerable": false, "rep": 0, "latency_ms": 3973.4, "llm_errors": [], "llm_calls": 2, "input_tokens": 1444, "output_tokens": 300, "served": ["claude-opus-5-5"]},
+    {"id": "r086", "split": "test", "tags": ["unanswerable"], "returned": 5, "ranked": ["invoice-apply", "seller-onboarding", "payment-methods", "affiliate", "realname"], "top_score": 0.3825, "answerable": false, "rep": 0, "latency_ms": 4577.0, "llm_errors": [], "llm_calls": 2, "input_tokens": 1910, "output_tokens": 352, "served": ["claude-opus-5-5"]},
+    {"id": "r087", "split": "dev", "tags": ["unanswerable"], "returned": 5, "ranked": ["sub-accounts", "realname", "bind-phone", "account-cancel", "notifications"], "top_score": 0.2807, "answerable": false, "rep": 0, "latency_ms": 4518.9, "llm_errors": [], "llm_calls": 2, "input_tokens": 2233, "output_tokens": 315, "served": ["claude-opus-5-5"]},
+    {"id": "r088", "split": "dev", "tags": ["unanswerable"], "returned": 5, "ranked": ["installation", "tech-troubleshooting", "payment-methods", "giftcard", "api-limits"], "top_score": 0.3342, "answerable": false, "rep": 0, "latency_ms": 3743.8, "llm_errors": [], "llm_calls": 2, "input_tokens": 2412, "output_tokens": 279, "served": ["claude-opus-5-5"]},
+    {"id": "r089", "split": "test", "tags": ["unanswerable"], "returned": 5, "ranked": ["exchange", "modify-order", "price-protect", "coupons", "group-buy"], "top_score": 0.2059, "answerable": false, "rep": 0, "latency_ms": 2860.9, "llm_errors": [], "llm_calls": 2, "input_tokens": 1929, "output_tokens": 185, "served": ["claude-opus-5-5"]},
+    {"id": "r090", "split": "test", "tags": ["unanswerable"], "returned": 5, "ranked": ["tech-troubleshooting", "sub-accounts", "upload-export", "notifications", "account-cancel"], "top_score": 0.2342, "answerable": false, "rep": 0, "latency_ms": 2250.2, "llm_errors": [], "llm_calls": 2, "input_tokens": 2298, "output_tokens": 143, "served": ["claude-opus-5-5"]},
+    {"id": "r091", "split": "dev", "tags": ["unanswerable"], "returned": 5, "ranked": ["giftcard", "exchange", "coupons", "price-protect", "group-buy"], "top_score": 0.3491, "answerable": false, "rep": 0, "latency_ms": 3823.4, "llm_errors": [], "llm_calls": 2, "input_tokens": 2042, "output_tokens": 277, "served": ["claude-opus-5-5"]},
+    {"id": "r092", "split": "dev", "tags": ["unanswerable"], "returned": 5, "ranked": ["lost-parcel", "account-security", "installation", "notifications", "bind-phone"], "top_score": 0.3744, "answerable": false, "rep": 0, "latency_ms": 4336.0, "llm_errors": [], "llm_calls": 2, "input_tokens": 1905, "output_tokens": 340, "served": ["claude-opus-5-5"]},
+    {"id": "r093", "split": "dev", "tags": ["unanswerable"], "returned": 5, "ranked": ["refund-policy", "modify-order", "presale", "bind-phone", "bluetooth"], "top_score": 0.3333, "answerable": false, "rep": 0, "latency_ms": 5864.9, "llm_errors": [], "llm_calls": 2, "input_tokens": 2121, "output_tokens": 325, "served": ["claude-opus-5-5"]}
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "suite": "e2e",
+  "mode": "live",
+  "split": "all",
+  "reps": 1,
+  "cases": 30,
+  "dataset": "8da95f07071c75bd",
+  "status": "complete",
+  "model_mismatches": [],
+  "timestamp": "2026-11-24T03:15:24",
+  "git": "4ee28fa-dirty",
+  "config": {
+    "model": "claude-opus-5-5",
+    "concurrency": 1,
+    "limit": 30
+  },
+  "metrics": {
+    "success": {
+      "rate": 1.0,
+      "n": 30,
+      "ci95": [
+        0.8865,
+        1.0
+      ]
+    },
+    "status": {
+      "success": 30
+    },
+    "agents": {
+      "general": 11,
+      "billing": 11,
+      "technical": 6,
+      "escalation": 2
+    },
+    "tool_calls": {
+      "search_knowledge_base": 26,
+      "suggest_required_fields": 3,
+      "check_billing_fields": 3,
+      "build_diagnostic_plan": 2,
+      "inspect_request_context": 4
+    },
+    "llm_errors": {},
+    "llm_calls_by_stage": {
+      "intent": 30,
+      "agent.general": 20,
+      "rag.rewrite": 26,
+      "rag.rerank": 26,
+      "agent.billing": 21,
+      "agent.technical": 12
+    },
+    "latency_by_agent_count": {
+      "1": {
+        "p50": 13534.6,
+        "n": 30
+      }
+    },
+    "latency_ms": {
+      "p50": 13534.6,
+      "p95": 16450.4,
+      "max": 23487.6
+    },
+    "llm_calls": 135,
+    "llm_calls_per_case": 4.5,
+    "input_tokens": 203693,
+    "output_tokens": 28650
+  },
+  "notes": [
+    "account_security-007 于 2026-11-24 改标为紧急，按已保存的预测重算，未重新调用模型"
+  ],
+  "rows": [
+    {"id": "order_status-001", "split": "dev", "tags": ["colloquial"], "rep": 0, "status": "success", "agents": ["general"], "tools": ["search_knowledge_base", "suggest_required_fields"], "answer_chars": 363, "latency_ms": 11333.9, "llm_calls": 5, "input_tokens": 7242, "output_tokens": 836, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.general": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "logistics-001", "split": "dev", "tags": ["colloquial"], "rep": 0, "status": "success", "agents": ["general"], "tools": ["search_knowledge_base", "suggest_required_fields"], "answer_chars": 471, "latency_ms": 16147.7, "llm_calls": 5, "input_tokens": 7650, "output_tokens": 1139, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.general": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "refund-001", "split": "test", "tags": ["implicit", "colloquial"], "rep": 0, "status": "success", "agents": ["billing"], "tools": ["search_knowledge_base", "check_billing_fields"], "answer_chars": 553, "latency_ms": 14568.8, "llm_calls": 5, "input_tokens": 7560, "output_tokens": 1208, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.billing": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "invoice-001", "split": "test", "tags": ["implicit"], "rep": 0, "status": "success", "agents": ["billing"], "tools": ["search_knowledge_base"], "answer_chars": 438, "latency_ms": 10773.1, "llm_calls": 5, "input_tokens": 7296, "output_tokens": 722, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.billing": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "payment_issue-001", "split": "dev", "tags": ["implicit", "colloquial"], "rep": 0, "status": "success", "agents": ["billing"], "tools": ["search_knowledge_base", "check_billing_fields"], "answer_chars": 489, "latency_ms": 13580.6, "llm_calls": 5, "input_tokens": 7417, "output_tokens": 1177, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.billing": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "billing-001", "split": "dev", "tags": [], "rep": 0, "status": "success", "agents": ["billing"], "tools": ["search_knowledge_base"], "answer_chars": 335, "latency_ms": 13358.3, "llm_calls": 5, "input_tokens": 6844, "output_tokens": 1035, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.billing": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "technical-001", "split": "dev", "tags": ["implicit"], "rep": 0, "status": "success", "agents": ["technical"], "tools": ["search_knowledge_base", "build_diagnostic_plan"], "answer_chars": 578, "latency_ms": 13390.0, "llm_calls": 5, "input_tokens": 7711, "output_tokens": 1125, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.technical": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "technical_login-001", "split": "dev", "tags": ["typo"], "rep": 0, "status": "success", "agents": ["technical"], "tools": ["search_knowledge_base"], "answer_chars": 595, "latency_ms": 14608.8, "llm_calls": 5, "input_tokens": 7585, "output_tokens": 1221, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.technical": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "technical_crash-001", "split": "test", "tags": ["implicit"], "rep": 0, "status": "success", "agents": ["technical"], "tools": ["search_knowledge_base", "build_diagnostic_plan"], "answer_chars": 581, "latency_ms": 16450.4, "llm_calls": 5, "input_tokens": 7118, "output_tokens": 1260, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.technical": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "account-001", "split": "dev", "tags": [], "rep": 0, "status": "success", "agents": ["billing"], "tools": ["search_knowledge_base"], "answer_chars": 407, "latency_ms": 12954.2, "llm_calls": 5, "input_tokens": 6358, "output_tokens": 1025, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.billing": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "account_security-001", "split": "dev", "tags": ["implicit"], "rep": 0, "status": "success", "agents": ["billing"], "tools": ["search_knowledge_base", "search_knowledge_base"], "answer_chars": 531, "latency_ms": 23487.6, "llm_calls": 7, "input_tokens": 11731, "output_tokens": 1646, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.billing": 2, "rag.rewrite": 2, "rag.rerank": 2}, "llm_errors": [], "success": true},
+    {"id": "human_handoff-001", "split": "dev", "tags": ["implicit", "colloquial"], "rep": 0, "status": "success", "agents": ["escalation"], "tools": [], "answer_chars": 194, "latency_ms": 1552.6, "llm_calls": 1, "input_tokens": 683, "output_tokens": 72, "served": ["claude-opus-5-5"], "stages": {"intent": 1}, "llm_errors": [], "success": true},
+    {"id": "escalation-001", "split": "test", "tags": [], "rep": 0, "status": "success", "agents": ["escalation"], "tools": [], "answer_chars": 191, "latency_ms": 2545.8, "llm_calls": 1, "input_tokens": 674, "output_tokens": 242, "served": ["claude-opus-5-5"], "stages": {"intent": 1}, "llm_errors": [], "success": true},
+    {"id": "complaint-001", "split": "test", "tags": ["colloquial"], "rep": 0, "status": "success", "agents": ["general"], "tools": ["search_knowledge_base", "inspect_request_context"], "answer_chars": 482, "latency_ms": 16232.5, "llm_calls": 5, "input_tokens": 10558, "output_tokens": 1251, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.general": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "feedback-001", "split": "dev", "tags": ["implicit"], "rep": 0, "status": "success", "agents": ["general"], "tools": ["search_knowledge_base"], "answer_chars": 306, "latency_ms": 12491.0, "llm_calls": 5, "input_tokens": 6764, "output_tokens": 951, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.general": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "greeting-001", "split": "test", "tags": [], "rep": 0, "status": "success", "agents": ["general"], "tools": [], "answer_chars": 189, "latency_ms": 3925.4, "llm_calls": 2, "input_tokens": 2053, "output_tokens": 284, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.general": 1}, "llm_errors": [], "success": true},
+    {"id": "request-001", "split": "test", "tags": ["colloquial"], "rep": 0, "status": "success", "agents": ["general"], "tools": ["search_knowledge_base", "suggest_required_fields", "inspect_request_context"], "answer_chars": 337, "latency_ms": 13003.5, "llm_calls": 5, "input_tokens": 7157, "output_tokens": 986, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.general": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "query-001", "split": "dev", "tags": [], "rep": 0, "status": "success", "agents": ["general"], "tools": ["search_knowledge_base"], "answer_chars": 246, "latency_ms": 7703.0, "llm_calls": 5, "input_tokens": 7187, "output_tokens": 600, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.general": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "other-001", "split": "dev", "tags": ["out_of_domain"], "rep": 0, "status": "success", "agents": ["general"], "tools": [], "answer_chars": 216, "latency_ms": 4795.7, "llm_calls": 2, "input_tokens": 2057, "output_tokens": 337, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.general": 1}, "llm_errors": [], "success": true},
+    {"id": "order_status-002", "split": "dev", "tags": [], "rep": 0, "status": "success", "agents": ["general"], "tools": ["search_knowledge_base", "inspect_request_context"], "answer_chars": 428, "latency_ms": 13534.6, "llm_calls": 5, "input_tokens": 10719, "output_tokens": 1056, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.general": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "logistics-002", "split": "test", "tags": ["implicit"], "rep": 0, "status": "success", "agents": ["general"], "tools": ["search_knowledge_base"], "answer_chars": 345, "latency_ms": 11368.0, "llm_calls": 5, "input_tokens": 6913, "output_tokens": 856, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.general": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "refund-002", "split": "dev", "tags": ["colloquial"], "rep": 0, "status": "success", "agents": ["billing"], "tools": ["search_knowledge_base"], "answer_chars": 532, "latency_ms": 13621.6, "llm_calls": 5, "input_tokens": 6826, "output_tokens": 1026, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.billing": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "invoice-002", "split": "test", "tags": [], "rep": 0, "status": "success", "agents": ["billing"], "tools": ["search_knowledge_base"], "answer_chars": 504, "latency_ms": 13914.1, "llm_calls": 5, "input_tokens": 7467, "output_tokens": 811, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.billing": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "payment_issue-002", "split": "test", "tags": ["implicit"], "rep": 0, "status": "success", "agents": ["billing"], "tools": ["search_knowledge_base", "check_billing_fields"], "answer_chars": 508, "latency_ms": 14701.6, "llm_calls": 5, "input_tokens": 12455, "output_tokens": 1198, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.billing": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "billing-002", "split": "dev", "tags": [], "rep": 0, "status": "success", "agents": ["billing"], "tools": ["search_knowledge_base"], "answer_chars": 427, "latency_ms": 14989.0, "llm_calls": 5, "input_tokens": 6777, "output_tokens": 1045, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.billing": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "technical-002", "split": "dev", "tags": ["implicit", "number_trap"], "rep": 0, "status": "success", "agents": ["technical"], "tools": ["search_knowledge_base"], "answer_chars": 659, "latency_ms": 14691.3, "llm_calls": 5, "input_tokens": 7248, "output_tokens": 1258, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.technical": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "technical_login-002", "split": "dev", "tags": ["implicit"], "rep": 0, "status": "success", "agents": ["technical"], "tools": ["search_knowledge_base"], "answer_chars": 539, "latency_ms": 16247.5, "llm_calls": 5, "input_tokens": 7157, "output_tokens": 1223, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.technical": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "technical_crash-002", "split": "test", "tags": ["implicit"], "rep": 0, "status": "success", "agents": ["technical"], "tools": ["search_knowledge_base"], "answer_chars": 646, "latency_ms": 14166.0, "llm_calls": 5, "input_tokens": 6860, "output_tokens": 1223, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.technical": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true},
+    {"id": "account-002", "split": "test", "tags": [], "rep": 0, "status": "success", "agents": ["billing"], "tools": [], "answer_chars": 261, "latency_ms": 7761.0, "llm_calls": 2, "input_tokens": 2236, "output_tokens": 524, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.billing": 1}, "llm_errors": [], "success": true},
+    {"id": "account_security-002", "split": "dev", "tags": [], "rep": 0, "status": "success", "agents": ["general"], "tools": ["search_knowledge_base", "inspect_request_context"], "answer_chars": 480, "latency_ms": 14831.2, "llm_calls": 5, "input_tokens": 7390, "output_tokens": 1313, "served": ["claude-opus-5-5"], "stages": {"intent": 1, "agent.general": 2, "rag.rewrite": 1, "rag.rerank": 1}, "llm_errors": [], "success": true}
+  ]
+}

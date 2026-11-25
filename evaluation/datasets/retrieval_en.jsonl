@@ -1,0 +1,64 @@
+{"id": "en-r001", "query": "Who pays for shipping when I send something back?", "relevant": ["refund-policy"], "answer": ["退货运费由用户承担"], "tags": ["english"], "split": "dev"}
+{"id": "en-r002", "query": "I bought it almost a month ago and it is faulty, can I still return it?", "relevant": ["refund-policy"], "answer": ["需要提供商品质量问题的证据才能退款"], "tags": ["english"], "split": "dev"}
+{"id": "en-r003", "query": "My refund went to my credit card but I do not see more money available", "relevant": ["refund-arrival"], "answer": ["信用卡退款体现为当期账单抵扣"], "tags": ["english"], "split": "test"}
+{"id": "en-r004", "query": "I paid with a gift card and returned the item, where did the money go?", "relevant": ["refund-arrival"], "answer": ["礼品卡支付的部分退回礼品卡余额"], "tags": ["english", "distractor"], "split": "dev"}
+{"id": "en-r005", "query": "I am halfway through the online course, can I get a refund?", "relevant": ["virtual-refund"], "answer": ["已学习进度超过 20% 的课程不予退款"], "tags": ["english"], "split": "dev"}
+{"id": "en-r006", "query": "The livestream class starts tomorrow and I changed my mind", "relevant": ["virtual-refund"], "answer": ["直播课开课前 24 小时可全额退款"], "tags": ["english"], "split": "dev"}
+{"id": "en-r007", "query": "These shoes are too big, I need one size down", "relevant": ["exchange"], "answer": ["需在签收后 15 天内申请"], "tags": ["english"], "split": "dev"}
+{"id": "en-r008", "query": "The price dropped three days after I bought it", "relevant": ["price-protect"], "answer": ["签收后 7 天内，同一商品在本平台降价可申请价保"], "tags": ["english"], "split": "dev"}
+{"id": "en-r009", "query": "My flash sale item got cheaper later, will you pay the difference?", "relevant": ["price-protect"], "answer": ["秒杀、拼团、清仓商品不参与价保"], "tags": ["english", "distractor"], "split": "dev"}
+{"id": "en-r010", "query": "What documents do I need for a VAT special invoice?", "relevant": ["invoice-apply"], "answer": ["开户行及账号"], "tags": ["english"], "split": "dev"}
+{"id": "en-r011", "query": "Can a dozen orders go on one invoice?", "relevant": ["invoice-apply"], "answer": ["最多合并 20 笔"], "tags": ["english"], "split": "dev"}
+{"id": "en-r012", "query": "The company name on my invoice is wrong", "relevant": ["invoice-change"], "answer": ["抬头、税号错误可以重开"], "tags": ["english"], "split": "dev"}
+{"id": "en-r013", "query": "I want to change an invoice from last year", "relevant": ["invoice-change"], "answer": ["跨月发票需财务人工审核"], "tags": ["english"], "split": "test"}
+{"id": "en-r014", "query": "What should I write in the memo for a corporate bank transfer?", "relevant": ["payment-methods"], "answer": ["对公转账需备注订单号"], "tags": ["english"], "split": "test"}
+{"id": "en-r015", "query": "Can I pay when the parcel arrives?", "relevant": ["payment-methods"], "answer": ["货到付款仅限同城配送订单"], "tags": ["english"], "split": "dev"}
+{"id": "en-r016", "query": "I got two text messages saying I was charged", "relevant": ["duplicate-charge"], "answer": ["其中一条通常为预授权"], "tags": ["english"], "split": "dev"}
+{"id": "en-r017", "query": "Money was taken but there is no order", "relevant": ["duplicate-charge"], "answer": ["未生成订单的扣款会在核对后退回"], "tags": ["english"], "split": "dev"}
+{"id": "en-r018", "query": "I do not want to be billed for membership every month", "relevant": ["subscription"], "answer": ["扣费服务中同时解约"], "tags": ["english"], "split": "test"}
+{"id": "en-r019", "query": "If I stop auto renewal, can I keep using it now?", "relevant": ["subscription"], "answer": ["关闭后当前周期权益保留到期满"], "tags": ["english"], "split": "dev"}
+{"id": "en-r020", "query": "Can I stack a spend-and-save coupon with my member discount?", "relevant": ["coupons"], "answer": ["满减券与会员折扣不叠加"], "tags": ["english"], "split": "dev"}
+{"id": "en-r021", "query": "I returned one item from the order, do I get the coupon back?", "relevant": ["coupons"], "answer": ["部分退款不退券"], "tags": ["english", "distractor"], "split": "test"}
+{"id": "en-r022", "query": "Can I turn a gift card into cash?", "relevant": ["giftcard"], "answer": ["不找零、不提现"], "tags": ["english"], "split": "test"}
+{"id": "en-r023", "query": "My tracking has not moved for three days", "relevant": ["lost-parcel"], "answer": ["物流超过 72 小时没有更新"], "tags": ["english"], "split": "test"}
+{"id": "en-r024", "query": "It says delivered but I never received it", "relevant": ["lost-parcel"], "answer": ["再在 48 小时内联系客服发起签收核查"], "tags": ["english"], "split": "test"}
+{"id": "en-r025", "query": "The box is damaged, should I accept it?", "relevant": ["lost-parcel"], "answer": ["外包装破损请当面拒收并拍照"], "tags": ["english"], "split": "test"}
+{"id": "en-r026", "query": "Can you ship to Tokyo?", "relevant": ["international"], "answer": ["新加坡、马来西亚和日本"], "tags": ["english"], "split": "test"}
+{"id": "en-r027", "query": "Do I have to pay customs for an order to Singapore?", "relevant": ["international"], "answer": ["关税由收件人承担"], "tags": ["english"], "split": "test"}
+{"id": "en-r028", "query": "It has already shipped, can I still cancel?", "relevant": ["modify-order"], "answer": ["已发货订单不能取消"], "tags": ["english", "distractor"], "split": "test"}
+{"id": "en-r029", "query": "I picked the wrong size but it has not shipped yet", "relevant": ["modify-order"], "answer": ["商品规格不能直接修改，需取消后重新下单"], "tags": ["english", "distractor"], "split": "dev"}
+{"id": "en-r030", "query": "Is the deposit refundable?", "relevant": ["presale"], "answer": ["定金不退"], "tags": ["english", "distractor"], "split": "dev"}
+{"id": "en-r032", "query": "I deleted my account and regret it", "relevant": ["account-cancel"], "answer": ["提交申请后有 15 天冷静期"], "tags": ["english"], "split": "dev"}
+{"id": "en-r034", "query": "I misspelled my name in identity verification", "relevant": ["realname"], "answer": ["姓名填错可在 30 天内修改一次"], "tags": ["english"], "split": "dev"}
+{"id": "en-r035", "query": "My old phone number is deactivated, how do I change the linked one?", "relevant": ["bind-phone"], "answer": ["申诉 1-3 个工作日处理"], "tags": ["english"], "split": "dev"}
+{"id": "en-r037", "query": "An employee left, what do I do with their account?", "relevant": ["sub-accounts"], "answer": ["人员离职后应及时停用其子账号"], "tags": ["english"], "split": "dev"}
+{"id": "en-r038", "query": "The API keeps returning 429", "relevant": ["api-limits"], "answer": ["默认限流每分钟 60 次"], "tags": ["english"], "split": "dev"}
+{"id": "en-r039", "query": "How long until an API key expires?", "relevant": ["api-limits"], "answer": ["有效期 180 天"], "tags": ["english"], "split": "dev"}
+{"id": "en-r040", "query": "My callback never fires, the server is on our internal network", "relevant": ["webhook"], "answer": ["内网地址和自签名证书不会被回调"], "tags": ["english"], "split": "test"}
+{"id": "en-r041", "query": "The exported spreadsheet is all question marks", "relevant": ["upload-export"], "answer": ["从文本导入并选择 UTF-8"], "tags": ["english"], "split": "dev"}
+{"id": "en-r042", "query": "A 300 MB file will not upload", "relevant": ["upload-export"], "answer": ["单个文件上限 200MB"], "tags": ["english"], "split": "test"}
+{"id": "en-r043", "query": "My phone cannot find the speaker", "relevant": ["bluetooth"], "answer": ["长按电源键 5 秒至蓝灯闪烁"], "tags": ["english"], "split": "dev"}
+{"id": "en-r045", "query": "My phone got wet, is that covered?", "relevant": ["warranty"], "answer": ["进水、私自拆修不在质保范围"], "tags": ["english"], "split": "test"}
+{"id": "en-r046", "query": "How long is the battery covered?", "relevant": ["warranty"], "answer": ["电池等易耗品质保 6 个月"], "tags": ["english"], "split": "dev"}
+{"id": "en-r047", "query": "Does installing the air conditioner cost anything?", "relevant": ["installation"], "answer": ["基础安装免费"], "tags": ["english"], "split": "dev"}
+{"id": "en-r048", "query": "Is a human agent available at midnight?", "relevant": ["service-hours"], "answer": ["人工在线客服 9:00-21:00"], "tags": ["english"], "split": "test"}
+{"id": "en-r049", "query": "How much is 100 points worth?", "relevant": ["membership-points"], "answer": ["100 积分 = 1 元"], "tags": ["english"], "split": "dev"}
+{"id": "en-r050", "query": "How much do I need to spend to become a gold member?", "relevant": ["membership-points"], "answer": ["金卡会员（累计消费 5000 元）"], "tags": ["english"], "split": "dev"}
+{"id": "en-r052", "query": "What is the minimum order for free shipping?", "relevant": ["delivery"], "answer": ["订单满 99 元"], "tags": ["english"], "split": "dev"}
+{"id": "en-r053", "query": "Someone logged into my account from another city", "relevant": ["account-security"], "answer": ["系统会自动锁定账户并发送通知"], "tags": ["english"], "split": "test"}
+{"id": "en-r055", "query": "I keep getting a 401 when signing in", "relevant": ["tech-troubleshooting"], "answer": ["登录失败 401 错误：表示认证失败"], "tags": ["english", "distractor"], "split": "dev"}
+{"id": "en-r056", "query": "The app keeps crashing", "relevant": ["tech-troubleshooting"], "answer": ["请尝试清除缓存后重启应用"], "tags": ["english"], "split": "dev"}
+{"id": "en-r068", "query": "Can I stick the return label directly on the shoe box?", "relevant": ["returns-howto"], "answer": ["不能直接在鞋盒上粘贴快递单"], "tags": ["english", "long_doc"], "split": "dev"}
+{"id": "en-r069", "query": "What is the most the return shipping insurance pays?", "relevant": ["returns-howto"], "answer": ["运费险最高赔付 25 元"], "tags": ["english", "long_doc"], "split": "dev"}
+{"id": "en-r072", "query": "What is the longest credit term you offer?", "relevant": ["enterprise-contract"], "answer": ["账期最长 45 天"], "tags": ["english", "long_doc"], "split": "test"}
+{"id": "en-r073", "query": "If we do not renew the contract, how long do you keep our data?", "relevant": ["enterprise-contract"], "answer": ["未续签的服务到期后保留数据 60 天"], "tags": ["english", "long_doc"], "split": "test"}
+{"id": "en-r075", "query": "How long do you keep chat records?", "relevant": ["privacy"], "answer": ["聊天记录保存 180 天"], "tags": ["english", "long_doc"], "split": "dev"}
+{"id": "en-r076", "query": "How do I turn off personalised recommendations?", "relevant": ["privacy"], "answer": ["可以在设置的隐私中关闭个性化推荐"], "tags": ["english", "long_doc"], "split": "test"}
+{"id": "en-r078", "query": "How do I return something and when will the money arrive?", "relevant": ["returns-howto", "refund-policy"], "answer": ["点击申请售后", "5-7 个工作日内退回原支付账户"], "tags": ["english", "multi_doc"], "split": "dev"}
+{"id": "en-r081", "query": "What is the difference between API errors 401 and 403?", "relevant": ["api-limits", "sub-accounts"], "answer": ["过期返回 401", "403 权限不足通常是角色未授权"], "tags": ["english", "multi_doc"], "split": "dev"}
+{"id": "en-r082", "query": "What is the name of your boss?", "relevant": [], "answer": [], "tags": ["english", "unanswerable"], "split": "test"}
+{"id": "en-r083", "query": "Does the store have parking?", "relevant": [], "answer": [], "tags": ["english", "unanswerable"], "split": "dev"}
+{"id": "en-r085", "query": "Will it rain tomorrow?", "relevant": [], "answer": [], "tags": ["english", "unanswerable"], "split": "dev"}
+{"id": "en-r086", "query": "What is your stock ticker?", "relevant": [], "answer": [], "tags": ["english", "unanswerable"], "split": "test"}
+{"id": "en-r088", "query": "Where is the nearest EV charging station?", "relevant": [], "answer": [], "tags": ["english", "unanswerable"], "split": "dev"}
+{"id": "en-r090", "query": "Which database does your backend use?", "relevant": [], "answer": [], "tags": ["english", "unanswerable"], "split": "test"}
