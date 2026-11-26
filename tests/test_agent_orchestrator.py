@@ -81,7 +81,7 @@ def test_escalation_agent_is_a_real_non_llm_handoff_node():
 
     assert result.success is True
     assert result.escalate is True
-    assert "人工升级" in result.content
+    assert "人工客服" in result.content and "human_handoff" not in result.content
     assert client.calls == []
 
 

@@ -55,10 +55,8 @@ def critical(message, intent):
 def test_escalation_and_safety_tips_follow_the_user_language():
     text = critical("Someone is making payments from my account right now", IntentCategory.PAYMENT_ISSUE)
     assert not CJK.search(text) and text.startswith("Please make sure you are safe first")
-    assert "120" in text and "freeze" in text and "passwords" in text and 'Recorded details: {"order_id": ["A1"]}' in text
+    assert "120" in text and "freeze" in text and "passwords" in text and "- Order ID: A1" in text
     assert "outage" in critical("The whole site is down and orders are lost", IntentCategory.TECHNICAL)
-    req = Request("请帮我转人工", "u", "c", intent=IntentCategory.HUMAN_HANDOFF, entities={"order_id": [], "amount": []})
-    assert "已记录信息：无" in asyncio.run(EscalationAgent(SimpleNamespace(), "m").handle(req)).content
     chinese = critical("账户正在被盗刷", IntentCategory.PAYMENT_ISSUE)
     assert chinese.startswith("请先确保安全") and "冻结" in chinese
 

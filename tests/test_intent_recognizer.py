@@ -235,13 +235,14 @@ def test_critical_reply_starts_with_safety_notice(intent, extra):
     text = asyncio.run(AgentOrchestrator(api_key="test")._pool[AgentType.ESCALATION][0].handle(request)).content
     # 人身安全提示与意图无关，始终排在最前
     assert text.startswith("请先确保安全") and "120" in text and "119" in text
-    assert text.index("120") < text.index("人工升级处理")
+    assert text.index("120") < text.index("情况紧急，需要人工客服尽快处理")
     for word in ("冻结", "覆盖数据"):
         assert (word in text) is (word == extra)
 
 
-@pytest.mark.parametrize("intent,urgency", [
-    (IntentCategory.HUMAN_HANDOFF, UrgencyLevel.HIGH), (IntentCategory.ESCALATION, UrgencyLevel.HIGH)])
-def test_ordinary_handoff_has_no_safety_notice(intent, urgency):
+@pytest.mark.parametrize("intent,urgency,opening", [
+    (IntentCategory.HUMAN_HANDOFF, UrgencyLevel.HIGH, "好的，这个问题转给人工客服处理。"),
+    (IntentCategory.ESCALATION, UrgencyLevel.HIGH, "这个问题需要人工客服跟进处理。")])
+def test_ordinary_handoff_has_no_safety_notice(intent, urgency, opening):
     text = escalation_reply(intent, urgency)
-    assert text.startswith("这个问题需要人工升级处理") and "120" not in text
+    assert text.startswith(opening) and "120" not in text

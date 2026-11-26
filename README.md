@@ -204,6 +204,7 @@ docker compose --env-file ../Kora/.env up -d --build
 | `ANTHROPIC_BASE_URL` | Anthropic 兼容接口地址；留空时使用官方服务。 |
 | `ANTHROPIC_MODEL` | 当前服务支持的模型 ID，建议显式填写。 |
 | `KORA_FAST_MODEL` | 辅助调用（意图识别、查询改写与重排、记忆摘要和画像）使用的模型，默认留空即与主模型相同。换小模型前先用基准评测确认意图准确率。 |
+| `KORA_HANDOFF_CONTACT` | 用户要求转人工时告诉他的人工客服联系方式，例如服务时间和电话；留空时只提示通过官方渠道联系。系统目前没有接入人工排队，不会自动转接。 |
 | `KORA_PREFETCH_KNOWLEDGE` / `KORA_PREFETCH_TIMEOUT_S` | 回答前是否预取知识库，默认 `true`；预取超时默认 2 秒，超时或失败时由 Agent 自行检索。 |
 | `REDIS_PASSWORD` | Compose 创建 Redis 时使用的密码。 |
 | `REDIS_URL` | 应用连接地址；根目录 Compose 根据 `REDIS_PASSWORD` 覆盖为容器网络地址。 |

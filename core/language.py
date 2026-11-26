@@ -46,7 +46,6 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "en": "Sorry, we couldn't process your request. Please try again later.",
     },
     "supplement": {"zh": "补充说明：", "en": "Additional information:"},
-    "none": {"zh": "无", "en": "none"},
     "outcome_unknown": {
         "zh": "该请求涉及可能修改数据的工具，请先核验执行结果再发起新的请求。",
         "en": "This request may already have changed data. Please check the result before sending a new request.",
@@ -69,18 +68,24 @@ TEXTS: Dict[str, Dict[str, str]] = {
         "en": "If this is an outage or data loss, stop anything that could overwrite data, and note when it started, "
               "what is affected and any error messages.",
     },
-    "escalation": {
-        "zh": "这个问题需要人工升级处理，以下信息可交给人工客服继续核验。\n\n"
-              "升级原因：意图={intent}，紧急度={urgency}\n"
-              "已记录信息：{entities}\n"
-              "目前系统尚未接入人工工单队列，请通过现有客服渠道联系人工。"
-              "请不要发送密码、短信验证码或完整支付凭证。",
-        "en": "This needs a human agent. You can pass the details below to them so they can continue.\n\n"
-              "Reason: intent={intent}, urgency={urgency}\n"
-              "Recorded details: {entities}\n"
-              "This system is not connected to a ticket queue yet, so please contact a human agent through the existing "
-              "support channels. Do not send passwords, SMS codes or full payment credentials.",
-    },
+    # 转人工交接：按情况开头，只列有值的信息，不出现意图代码、紧急度等内部字段。
+    "handoff_request": {"zh": "好的，这个问题转给人工客服处理。", "en": "Sure, I'll pass this to a human agent."},
+    "handoff_followup": {"zh": "这个问题需要人工客服跟进处理。", "en": "This needs follow-up from a human agent."},
+    "handoff_urgent": {"zh": "情况紧急，需要人工客服尽快处理。", "en": "This is urgent and needs a human agent as soon as possible."},
+    "handoff_details": {"zh": "联系人工客服时提供这些信息，可以处理得更快：", "en": "Share these details with the agent to speed things up:"},
+    "handoff_channel": {"zh": "目前这里还不能直接接通人工客服，请通过官方客服渠道联系。",
+                        "en": "I can't connect you to a human agent from here yet, so please contact support through the official channels."},
+    "handoff_contact": {"zh": "人工客服联系方式：{contact}", "en": "How to reach a human agent: {contact}"},
+    "handoff_privacy": {"zh": "请不要发送密码、短信验证码或完整支付凭证。", "en": "Please don't share passwords, SMS codes or full payment details."},
+    "field_topic": {"zh": "问题类型", "en": "Topic"},
+    "field_order_id": {"zh": "订单号", "en": "Order ID"},
+    "field_amount": {"zh": "金额", "en": "Amount"},
+    "field_date": {"zh": "日期", "en": "Date"},
+    "field_error_code": {"zh": "错误码", "en": "Error code"},
+    "field_product": {"zh": "商品", "en": "Product"},
+    "topic_commerce": {"zh": "订单、支付与售后", "en": "orders, payments and after-sales"},
+    "topic_technical": {"zh": "技术问题", "en": "a technical issue"},
+    "topic_account": {"zh": "账户问题", "en": "an account issue"},
     # 以下写给模型
     "reply_language": {
         "zh": "",
