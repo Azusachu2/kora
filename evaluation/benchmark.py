@@ -6,7 +6,7 @@
   python -m evaluation.benchmark intent --mode live        # 调用 .env 中的模型，产生费用
   python -m evaluation.benchmark retrieval --lang en       # 英文查询检索同一份中文语料
   python -m evaluation.benchmark retrieval --mode live     # 改写 → 召回 → 重排，产生费用
-  python -m evaluation.benchmark e2e --mode live --limit 30
+  python -m evaluation.benchmark e2e --mode live --limit 30 --stream
   常用参数：--split dev|test|all  --reps 3  --out a.json  --compare evaluation/baselines/intent-offline.json
 
 调优只看 dev，最后用 test 报一次数。两者按标签和意图随机分层，划分与得分无关。
@@ -41,7 +41,9 @@ if str(ROOT) not in sys.path:
 
 from agents.agent_orchestrator import AgentOrchestrator, Request
 from core.intent_recognizer import IntentCategory, IntentRecognizer, UrgencyLevel
+from core.llm_utils import fast_model
 from core.performance import collect_performance, performance_snapshot
+from core.streaming import Emitter
 
 DATASETS = ROOT / "evaluation" / "datasets"
 ALWAYS_SCORED = ("order_id", "amount", "error_code")
@@ -158,9 +160,38 @@ class SpyClient:
             status = getattr(ex, "status_code", None)
             call["error"] = type(ex).__name__ + (f":{status}" if status else "")
             raise
+        if kwargs.get("stream"):
+            return SpyStream(response, call)
         call["served"] = getattr(response, "model", None)
         call["stop"] = getattr(response, "stop_reason", None)
         return response
+
+
+class SpyStream:
+    """透传流式事件，只记下实际模型、停止原因、内容块类型和中断，不记内容。"""
+
+    def __init__(self, stream, call):
+        self._stream, self._call = stream, call
+
+    def __getattr__(self, name):
+        return getattr(self._stream, name)
+
+    async def __aiter__(self):
+        try:
+            async for event in self._stream:
+                if event.type == "message_start":
+                    self._call["served"] = event.message.model
+                elif event.type == "message_delta":
+                    self._call["stop"] = event.delta.stop_reason
+                elif event.type == "content_block_start":
+                    self._call.setdefault("blocks", []).append(event.content_block.type)
+                yield event
+        except asyncio.CancelledError:
+            self._call["error"] = "timeout"
+            raise
+        except Exception as ex:
+            self._call["error"] = type(ex).__name__
+            raise
 
 
 def llm_status(failed, calls):
@@ -192,12 +223,23 @@ def usage_fields(calls):
     llm = performance_snapshot().get("llm", {})
     return {"llm_calls": llm.get("calls", 0), "input_tokens": llm.get("input_tokens", 0),
             "output_tokens": llm.get("output_tokens", 0),
-            "served": sorted({c["served"] for c in calls if c.get("served")})}
+            "served": sorted({c["served"] for c in calls if c.get("served")}),
+            "mismatched": sorted({c["served"] for c in calls if c.get("served") and not c["served"].startswith(c["requested"] or "")})}
 
 
-def model_mismatches(rows, requested):
-    """实际响应模型与请求不一致（供应商降级或改道）时，分数不代表该模型。"""
-    return sorted({m for r in rows for m in r.get("served", []) if requested and not m.startswith(requested)})
+def model_mismatches(rows):
+    """实际响应模型与请求不一致（供应商降级或改道）时，分数不代表该模型。主模型与辅助模型各按自己的请求核对。"""
+    return sorted({m for r in rows for m in r.get("mismatched", [])})
+
+
+def model_usage():
+    """每个模型的输入、输出 token，用于按各自单价估算费用。"""
+    totals = {}
+    for call in performance_snapshot().get("llm_calls", []):
+        row = totals.setdefault(call["model"], [0, 0])
+        row[0] += call.get("input_tokens") or 0
+        row[1] += call.get("output_tokens") or 0
+    return totals
 
 
 # ── 意图与路由 ────────────────────────────────────────────────────────────────
@@ -488,30 +530,44 @@ def tool_manager_for(kb, cfg):
 
 # ── 端到端耗时 ────────────────────────────────────────────────────────────────
 
-async def run_e2e(cases, orchestrator, *, reps=1, concurrency=1, timeout=50):
+async def run_e2e(cases, orchestrator, *, reps=1, concurrency=1, timeout=50, stream=False):
     """编排层完整一轮（不含 HTTP 与记忆），只看耗时、调用次数、token 和执行状态，不评价回答质量。"""
     gate = asyncio.Semaphore(concurrency)
 
     async def one(case, rep):
         history = case.get("history")
         context = "[最近对话]\n" + "\n".join(f"{m['role']}: {m['content']}" for m in history) if history else ""
-        req = Request(message=case["message"], user_id="benchmark", conv_id=f"{case['id']}-{rep}",
-                      context=context, history=history, conversation_state={})
         row = {"id": case["id"], "split": case["split"], "tags": case["tags"], "rep": rep}
         async with gate:
             with observe() as calls:
                 started = time.monotonic()
+                emitter = Emitter() if stream else None
+                req = Request(message=case["message"], user_id="benchmark", conv_id=f"{case['id']}-{rep}",
+                              context=context, history=history, conversation_state={}, emit=emitter)
                 try:
                     result = await asyncio.wait_for(orchestrator.run(req), timeout)
                     row.update(status=result.status, agents=[a.value for a in result.agent_types],
-                               tools=result.tools_used, answer_chars=len(result.response))
+                               tools=result.tools_used, answer_chars=len(result.response),
+                               prefetched=sum(t.get("results", 0) for t in getattr(result, "tool_traces", []) if t.get("event") == "knowledge_prefetch"))
+                    if emitter:
+                        streamed = emitter.text
+                        emitter.finish(result.response)
+                        row["first_token_ms"] = emitter.first_ms
+                        # 流出的正文与最终回复不一致时 finish 会整段重发，首字耗时随之失真；记下事件序列便于排查。
+                        a, b = streamed.strip(), result.response.strip()
+                        row["stream"] = {"matched": a == b, "streamed_chars": len(a), "final_chars": len(b),
+                                         "common_prefix": len(os.path.commonprefix([a, b])),
+                                         "common_suffix": len(os.path.commonprefix([a[::-1], b[::-1]])),
+                                         "events": stream_events(emitter)}
                 except asyncio.TimeoutError:
                     row.update(status="timeout", agents=[], tools=[])
                 except Exception as ex:     # 单例异常不应丢掉已付费的其他结果
                     row.update(status=f"error:{type(ex).__name__}", agents=[], tools=[])
                 row.update(latency_ms=round((time.monotonic() - started) * 1000, 1), **usage_fields(calls))
                 row["stages"] = dict(collections.Counter(c["stage"] for c in performance_snapshot()["llm_calls"]))
+                row["tokens_by_model"] = model_usage()
         row["llm_errors"] = [c["error"] for c in calls if c.get("error")]
+        row["llm_blocks"] = [c["blocks"] for c in calls if c.get("blocks")]
         row["success"] = row["status"] == "success"
         return row
 
@@ -522,7 +578,25 @@ async def run_e2e(cases, orchestrator, *, reps=1, concurrency=1, timeout=50):
     return rows
 
 
+def stream_events(emitter):
+    """未被消费的事件按顺序压缩成 "status:answer delta×12 reset ..."，不含正文。"""
+    out = []
+    for event, data in list(emitter._queue._queue):
+        name = f"{event}:{data['stage']}" if event == "status" else event
+        if out and out[-1][0] == name:
+            out[-1][1] += 1
+        else:
+            out.append([name, 1])
+    return " ".join(name if n == 1 else f"{name}×{n}" for name, n in out)
+
+
 def summarize_e2e(rows):
+    first = [r["first_token_ms"] for r in rows if r.get("first_token_ms") is not None]
+    tokens = {}
+    for row in rows:
+        for model, (given, produced) in row.get("tokens_by_model", {}).items():
+            total = tokens.setdefault(model, [0, 0])
+            total[0], total[1] = total[0] + given, total[1] + produced
     return {"success": rate(rows, "success"), "status": dict(collections.Counter(r["status"] for r in rows)),
             "agents": dict(collections.Counter("+".join(sorted(r["agents"])) or "none" for r in rows)),
             "tool_calls": dict(collections.Counter(t for r in rows for t in r["tools"])),
@@ -530,6 +604,10 @@ def summarize_e2e(rows):
             "llm_calls_by_stage": dict(sum((collections.Counter(r["stages"]) for r in rows), collections.Counter())),
             "latency_by_agent_count": {str(n): {"p50": pct([r["latency_ms"] for r in g], 50), "n": len(g)}
                                        for n, g in sorted(_group(rows, lambda r: [len(r["agents"])]).items())},
+            "first_token_ms": {"p50": pct(first, 50), "p95": pct(first, 95), "n": len(first)},
+            "prefetched_turns": sum(r.get("prefetched", 0) > 0 for r in rows),
+            "stream_mismatch": [r["id"] for r in rows if not r.get("stream", {}).get("matched", True)],
+            "tokens_by_model": {model: {"input": given, "output": produced} for model, (given, produced) in tokens.items()},
             **cost_summary(rows)}
 
 
@@ -547,7 +625,7 @@ def report_status(suite, rows, mismatches):
 
 def build_report(suite, mode, split, reps, dataset_id, rows, config):
     metrics = {"intent": summarize_intent, "retrieval": summarize_retrieval, "e2e": summarize_e2e}[suite](rows)
-    mismatches = model_mismatches(rows, config.get("model"))
+    mismatches = model_mismatches(rows)
     return {"suite": suite, "mode": mode, "split": split, "reps": reps, "cases": len({r["id"] for r in rows}),
             "dataset": dataset_id, "status": report_status(suite, rows, mismatches), "model_mismatches": mismatches,
             "timestamp": datetime.now().isoformat(timespec="seconds"), "git": git_revision(), "config": config,
@@ -656,12 +734,14 @@ async def execute(args):
     intents, corpus, queries = load_jsonl("intent.jsonl"), load_jsonl("retrieval_corpus.jsonl"), load_jsonl("retrieval.jsonl")
     live = args.mode == "live"
     cfg = live_config(args.model) if live else {}
+    if live and not args.model and args.suite != "e2e":     # 与生产一致：意图和检索里的模型调用用辅助模型
+        cfg["model"] = fast_model(cfg["model"])
     embedder = None
     if args.mode in ("offline", "vector", "live"):      # 与生产一致：启动时加载本地向量模型
         from core.embedding import load_embedder
         embedder = load_embedder()
-    config = {"model": cfg.get("model"), "embedding": embedder.name if embedder else "chroma-default",
-              "concurrency": args.concurrency, "limit": args.limit}
+    config = {"model": cfg.get("model"), "fast_model": fast_model(cfg["model"]) if live else None,
+              "embedding": embedder.name if embedder else "chroma-default", "concurrency": args.concurrency, "limit": args.limit}
 
     if args.suite == "intent":
         cases = select(intents, args.split, args.limit, lambda r: r["intent"])
@@ -719,6 +799,9 @@ async def execute(args):
             return await run(vector)
 
     cases = select(intents, args.split, args.limit or 30, lambda r: r["intent"])
+    if args.ids:
+        wanted = args.ids.split(",")
+        cases = [case for case in intents if case["id"] in wanted]
     print(f"将执行 {len(cases) * args.reps} 轮完整对话，每轮约 2–10 次模型调用（{cfg['model']}）")
     from agents.tools import build_shared_rag_tools
     from core.skill_loader import SkillManager
@@ -737,7 +820,11 @@ async def execute(args):
         manager.rag_rerank = os.getenv("KORA_RAG_RERANK", "false").lower() in {"1", "true", "yes", "on"}
         config.update(rag_rewrite=manager.rag_rewrite, rag_rerank=manager.rag_rerank)
         orchestrator.set_shared_tools(build_shared_rag_tools(manager))
-        rows = await run_e2e(cases, orchestrator, reps=args.reps, concurrency=args.concurrency)
+        prefetch = os.getenv("KORA_PREFETCH_KNOWLEDGE", "true").lower() in {"1", "true", "yes", "on"}
+        if prefetch:
+            orchestrator.set_knowledge_prefetch(lambda query: manager.call("knowledge_search", {"query": query, "top_k": 5}))
+        config.update(prefetch=prefetch, stream=args.stream)
+        rows = await run_e2e(cases, orchestrator, reps=args.reps, concurrency=args.concurrency, stream=args.stream)
     return build_report("e2e", "live", args.split, args.reps, fingerprint(intents, corpus), rows, config)
 
 
@@ -750,9 +837,11 @@ def main(argv=None):
     parser.add_argument("--split", choices=("dev", "test", "all"), default="all")
     parser.add_argument("--lang", choices=("zh", "en"), default="zh", help="retrieval 使用的查询集")
     parser.add_argument("--limit", type=int, default=0, help="只跑前 N 条（各类别轮流抽取）")
+    parser.add_argument("--ids", help="e2e 只跑这些用例，逗号分隔")
     parser.add_argument("--reps", type=int, default=1)
     parser.add_argument("--concurrency", type=int, default=0, help="默认 intent/retrieval 为 4，e2e 为 1")
     parser.add_argument("--model", help="临时覆盖 ANTHROPIC_MODEL")
+    parser.add_argument("--stream", action="store_true", help="e2e 使用流式输出并记录首字耗时")
     parser.add_argument("--out")
     parser.add_argument("--compare", help="与此前的报告逐用例比较")
     args = parser.parse_args(argv)

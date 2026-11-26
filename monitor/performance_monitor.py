@@ -155,6 +155,8 @@ class PerformanceMonitor:
                 buckets=(10, 50, 100, 250, 500, 1000, 2000, 3000, 5000, 10000, 20000, 30000, 50000), registry=self._registry),
             "chat_latency_ms": Histogram("chat_latency_ms", "聊天 HTTP 请求总耗时（毫秒）", ["status"],
                 buckets=(50, 100, 250, 500, 1000, 2000, 5000, 10000, 20000, 30000, 50000), registry=self._registry),
+            "chat_first_token_ms": Histogram("chat_first_token_ms", "流式对话首字耗时（毫秒）",
+                buckets=(50, 100, 250, 500, 1000, 2000, 3000, 5000, 8000, 10000, 20000, 50000), registry=self._registry),
             "tool_success_rate": Gauge("tool_success_rate", "工具成功率", ["tool"], registry=self._registry),
             "requests_total": Counter("requests_total", "总请求数", registry=self._registry),
         }

@@ -1,7 +1,7 @@
 ---
 name: 通用客服接待规范
 description: 适用于 Kora GeneralAgent 的通用客服接待、信息澄清、问题分流和转人工规范
-keywords: 你好,您好,咨询,帮助,客服,订单,售后,活动,会员,账户,资料,投诉,建议,人工,转人工,处理进度,服务
+keywords: 你好,您好,咨询,帮助,客服,订单,售后,活动,会员,账户,资料,投诉,建议,人工,转人工,处理进度,服务,hello,help,order,delivery,shipping,shipment,account,membership,complaint,human agent,customer service
 agents: general
 enabled: true
 ---

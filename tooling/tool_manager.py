@@ -333,8 +333,8 @@ class MCPToolManager:
         prompt = self._clean_text(prompt)
         try:
             resp = await asyncio.wait_for(create_message(self._client,
-                stage="rag.rewrite",
-                model=self._model, max_tokens=512, temperature=0.3,
+                stage="rag.rewrite", effort="low",
+                model=self._model, max_tokens=1024, temperature=0.3,
                 messages=[{"role": "user", "content": prompt}],
             ), timeout=10)
             raw = extract_text_content(resp.content)
@@ -458,7 +458,7 @@ class MCPToolManager:
 
         try:
             resp = await asyncio.wait_for(create_message(self._client,
-                stage="rag.rerank",
+                stage="rag.rerank", effort="low",
                 model=self._model, max_tokens=2048, temperature=0.0,
                 messages=[{"role": "user", "content": prompt}],
             ), timeout=30)

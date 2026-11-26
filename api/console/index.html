@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kora Console</title>
+<style>
+:root {
+  --bg:#f3f2ee; --panel:#fff; --line:#e6e3dc; --soft:#f7f6f2; --text:#1d2321; --muted:#7a807c; --faint:#b9bdb8;
+  --accent:#0f7b5f; --accent-soft:#e3f3ec; --dark:#1f2b26; --model:#3b5bdb; --tool:#0e7490; --memory:#9a6b1f;
+  --warn:#b45309; --warn-soft:#fdf3e3; --bad:#b42318; --bad-soft:#fdecea;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,"Noto Serif SC","Songti SC",serif;
+  --mono:ui-monospace,"SF Mono",Consolas,monospace;
+}
+* { box-sizing:border-box; }
+html, body { height:100%; margin:0; }
+body { font:14px/1.55 system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; color:var(--text); background:var(--bg); display:flex; flex-direction:column; }
+button { font:inherit; color:inherit; cursor:pointer; }
+button:disabled { cursor:default; opacity:.5; }
+.mono { font-family:var(--mono); }
+.muted { color:var(--muted); }
+.spacer { flex:1; }
+
+/* ── 顶栏 ── */
+header { height:56px; flex:none; display:flex; align-items:center; gap:14px; padding:0 18px; background:var(--panel); border-bottom:1px solid var(--line); }
+.brand { display:flex; align-items:center; gap:8px; font-weight:600; font-size:16px; }
+.brand small { font-weight:400; color:var(--muted); font-size:13px; }
+.logo { width:26px; height:26px; border-radius:7px; background:var(--dark); color:#fff; display:grid; place-items:center; font:700 14px var(--serif); }
+.seg { display:inline-flex; border:1px solid var(--line); border-radius:9px; padding:2px; background:var(--soft); }
+.seg button { border:0; background:transparent; padding:4px 12px; border-radius:7px; color:var(--muted); }
+.seg button.on { background:var(--panel); color:var(--text); box-shadow:0 1px 2px rgba(0,0,0,.08); }
+.stat { color:var(--muted); font-size:13px; white-space:nowrap; }
+.stat b { color:var(--text); font-weight:600; }
+.dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--faint); margin-right:6px; vertical-align:1px; }
+.dot.on { background:var(--accent); }
+.btn { border:1px solid var(--line); background:var(--panel); border-radius:9px; padding:5px 12px; }
+.btn:hover { background:var(--soft); }
+
+/* ── 三栏 ── */
+main { flex:1; min-height:0; display:grid; grid-template-columns:minmax(300px,.95fr) minmax(360px,1.2fr) minmax(430px,1.5fr); gap:12px; padding:12px; }
+.panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+.panel-head { flex:none; display:flex; align-items:center; gap:10px; padding:12px 16px 10px; border-bottom:1px solid var(--line); }
+.panel-head h2 { margin:0; font:400 22px var(--serif); letter-spacing:-.2px; }
+.panel-head .hint { margin-left:auto; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+.scroll { flex:1; min-height:0; overflow:auto; padding:12px 14px; }
+.label { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:14px 2px 6px; }
+.chip { display:inline-block; font-size:11.5px; padding:1px 8px; border-radius:999px; background:#eef0ec; color:#3f4743; white-space:nowrap; }
+.chip.ok { background:var(--accent-soft); color:var(--accent); }
+.chip.warn { background:var(--warn-soft); color:var(--warn); }
+.chip.bad { background:var(--bad-soft); color:var(--bad); }
+.empty { color:var(--muted); font-size:13px; padding:6px 2px; }
+
+/* ── 对话 ── */
+.who { display:flex; align-items:center; gap:10px; border:1px dashed var(--line); border-radius:10px; padding:10px 12px; margin-bottom:12px; }
+.avatar { width:34px; height:34px; border-radius:50%; background:#2f5d50; color:#fff; display:grid; place-items:center; font-weight:600; font-size:13px; flex:none; }
+.who b { display:block; }
+.who span { font-size:12px; color:var(--muted); word-break:break-all; }
+.msg { margin:10px 0; display:flex; flex-direction:column; }
+.msg .bubble { padding:9px 13px; border-radius:12px; white-space:pre-wrap; word-break:break-word; max-width:92%; }
+.msg.user { align-items:flex-end; }
+.msg.user .bubble { background:var(--dark); color:#f3f6f4; border-bottom-right-radius:4px; }
+.msg.bot .bubble { background:var(--soft); border:1px solid var(--line); border-bottom-left-radius:4px; min-width:60px; }
+.msg.bot.active .bubble { border-color:#9fd3bf; box-shadow:0 0 0 3px #e9f6f0; }
+.msg .caption { font-size:12px; color:var(--muted); margin:4px 4px 0; display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+.msg .caption a { color:var(--accent); cursor:pointer; text-decoration:none; }
+.typing { color:var(--muted); font-size:12.5px; }
+.samples { flex:none; display:flex; flex-wrap:wrap; gap:6px; padding:8px 14px 0; }
+.samples button { border:1px solid var(--line); background:var(--panel); border-radius:999px; padding:3px 10px; font-size:12.5px; }
+.samples button:hover { background:var(--soft); }
+.composer { flex:none; padding:10px 14px 14px; }
+.composer form { display:flex; align-items:flex-end; gap:8px; border:1px solid var(--line); border-radius:12px; padding:8px 8px 8px 12px; }
+.composer textarea { flex:1; border:0; outline:0; resize:none; font:inherit; height:44px; background:transparent; }
+.send { width:34px; height:34px; border-radius:9px; border:0; background:var(--dark); color:#fff; font-size:16px; }
+.replay-item { border:1px solid var(--line); border-radius:10px; padding:9px 12px; margin-bottom:8px; cursor:pointer; }
+.replay-item:hover { background:var(--soft); }
+
+/* ── 数据库 ── */
+.tabs { display:flex; gap:4px; margin-left:auto; }
+.tabs button { border:0; background:transparent; padding:5px 12px; border-radius:8px; color:var(--muted); position:relative; }
+.tabs button.on { background:var(--soft); color:var(--text); }
+.badge { position:absolute; top:-4px; right:-4px; min-width:16px; height:16px; border-radius:8px; background:var(--warn); color:#fff; font-size:10.5px; line-height:16px; padding:0 4px; }
+.toolbar { flex:none; white-space:nowrap; display:flex; align-items:center; gap:8px; padding:8px 14px; border-bottom:1px solid var(--line); background:var(--soft); }
+.toolbar .snap { display:flex; gap:4px; flex-wrap:wrap; }
+.toolbar .snap button { border:1px solid var(--line); background:var(--panel); border-radius:7px; padding:1px 8px; font-size:12px; color:var(--muted); }
+.toolbar .snap button.on { border-color:var(--dark); color:var(--text); font-weight:600; }
+.toolbar input { margin-left:auto; border:1px solid var(--line); border-radius:8px; padding:4px 10px; width:170px; font:inherit; font-size:12.5px; background:var(--panel); }
+.card { border:1px solid var(--line); border-radius:10px; margin:8px 0; background:var(--panel); }
+.card-head { display:flex; align-items:center; gap:8px; padding:8px 12px; cursor:pointer; }
+.card-head .kind { font-size:10.5px; letter-spacing:.08em; color:var(--muted); }
+.card-head .name { font-weight:600; }
+.card-head .sub { color:var(--muted); font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; flex:1; }
+.card-body { border-top:1px solid var(--line); padding:8px 12px; font-size:13px; display:none; }
+.card.open .card-body { display:block; }
+.card.cited { border-color:#9fd3bf; background:#fbfefc; }
+.kv { display:grid; grid-template-columns:120px 1fr; gap:4px 12px; font-size:13px; margin:0; }
+.kv dt { color:var(--muted); }
+.kv dd { margin:0; word-break:break-word; }
+.changes { border:1px solid var(--line); border-radius:10px; padding:8px 12px; background:var(--soft); font-size:13px; }
+.changes li { margin:2px 0; }
+.changes ul { margin:2px 0 0; padding-left:18px; }
+.mem { padding:6px 0; border-bottom:1px dashed var(--line); font-size:13px; }
+.mem:last-child { border-bottom:0; }
+.mem .role { font-size:11px; color:var(--muted); margin-right:6px; }
+.clamp { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+pre.json { margin:6px 0 0; font:12px/1.45 var(--mono); background:var(--soft); border-radius:8px; padding:8px; white-space:pre-wrap; word-break:break-word; max-height:280px; overflow:auto; }
+.new { background:#fff7e0; }
+
+/* ── 轨迹 ── */
+.graph { flex:none; border-bottom:1px solid var(--line); padding:24px 10px 4px; position:relative; }
+.legend { position:absolute; right:14px; top:6px; display:flex; gap:10px; font-size:11px; color:var(--muted); }
+.legend i { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:4px; }
+svg text { font-family:var(--mono); }
+.turns { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+.turns button { border:1px solid var(--line); background:var(--panel); border-radius:8px; padding:2px 10px; font-size:12.5px; }
+.turns button.on { border-color:var(--dark); font-weight:600; }
+.summary { font-size:13px; color:var(--muted); margin:0 2px 10px; display:flex; gap:8px; flex-wrap:wrap; }
+.summary q { color:var(--text); font-style:italic; quotes:"“" "”"; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+details.step { border:1px solid var(--line); border-radius:10px; margin:7px 0; background:var(--panel); }
+details.step > summary { list-style:none; display:flex; align-items:center; gap:10px; padding:8px 12px; cursor:pointer; position:relative; }
+details.step > summary::-webkit-details-marker { display:none; }
+details.step > summary::after { content:"›"; color:var(--muted); margin-left:4px; transition:transform .15s; }
+details.step[open] > summary::after { transform:rotate(90deg); }
+.icon { width:24px; height:24px; border-radius:6px; background:var(--dark); color:#fff; display:grid; place-items:center; font-size:12px; flex:none; }
+.icon.model { background:var(--model); } .icon.tool { background:var(--tool); } .icon.mem { background:var(--memory); } .icon.ok { background:var(--accent); }
+.icon.small { width:18px; height:18px; font-size:10px; }
+.step-name { font-family:var(--mono); font-weight:600; font-size:13px; white-space:nowrap; }
+.step-detail { color:var(--muted); font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0; }
+.step-time { font-family:var(--mono); font-size:12px; color:var(--muted); white-space:nowrap; }
+.bar { position:absolute; left:12px; right:12px; bottom:2px; height:2px; }
+.bar span { position:absolute; top:0; height:2px; border-radius:2px; background:#b8d6ca; }
+.step-body { border-top:1px solid var(--line); padding:8px 12px 10px; font-size:13px; }
+.sub { display:flex; gap:8px; align-items:center; padding:4px 0; border-bottom:1px dashed var(--line); font-size:12.5px; }
+.sub:last-child { border-bottom:0; }
+.scorebar { display:grid; grid-template-columns:90px 1fr 46px; gap:8px; align-items:center; font-size:12.5px; margin:3px 0; }
+.scorebar .track { height:6px; background:#eef0ec; border-radius:3px; overflow:hidden; }
+.scorebar .fill { display:block; height:100%; background:var(--accent); }
+.reply { white-space:pre-wrap; background:var(--soft); border-radius:8px; padding:8px 10px; max-height:260px; overflow:auto; }
+.overlay { position:fixed; inset:0; background:rgba(20,24,22,.35); display:none; place-items:center; }
+.overlay.show { display:grid; }
+.overlay .box { background:var(--panel); border-radius:12px; padding:18px; width:360px; }
+.overlay input { width:100%; margin:10px 0; padding:6px 10px; border:1px solid var(--line); border-radius:8px; font:inherit; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="logo">K</div>Kora <small>Console</small></div>
+  <div class="seg" id="mode"><button data-mode="live" class="on" data-t="live"></button><button data-mode="replay" data-t="replay"></button></div>
+  <div class="spacer"></div>
+  <span class="stat"><span class="dot" id="conn"></span><span id="model">…</span></span>
+  <span class="stat"><span data-t="turns"></span> <b id="s-turns">0</b></span>
+  <span class="stat"><span data-t="calls"></span> <b id="s-calls">0</b></span>
+  <span class="stat"><span data-t="cost"></span> <b id="s-cost">$0.000</b></span>
+  <div class="seg" id="lang"><button data-lang="en">EN</button><button data-lang="zh" class="on">中</button></div>
+  <button class="btn" id="new-session">↺ <span data-t="newSession"></span></button>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="panel-head"><h2 data-t="conversation"></h2><span class="hint" id="conv-hint"></span></div>
+    <div class="scroll" id="chat"></div>
+    <div class="samples" id="samples"></div>
+    <div class="composer"><form id="form"><textarea id="input"></textarea><button class="send" id="send" title="Send">↑</button></form></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2 data-t="database"></h2>
+      <div class="tabs" id="db-tabs"><button data-tab="business" data-t="business"></button><button data-tab="session" class="on"><span data-t="sessionState"></span><span class="badge" id="change-badge" hidden></span></button></div>
+    </div>
+    <div class="toolbar"><span class="muted" data-t="snapshot"></span><div class="snap" id="snaps"></div><input id="search"></div>
+    <div class="scroll" id="db"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2 data-t="trace"></h2><span class="hint" data-t="traceHint"></span></div>
+    <div class="graph"><div class="legend"><span><i style="background:var(--dark)"></i><span data-t="lgNode"></span></span><span><i style="background:var(--model)"></i><span data-t="lgModel"></span></span><span><i style="background:var(--tool)"></i><span data-t="lgTool"></span></span><span><i style="background:var(--memory)"></i><span data-t="lgMemory"></span></span></div><svg id="graph" viewBox="0 0 600 218" width="100%"></svg></div>
+    <div class="scroll" id="trace"></div>
+  </section>
+</main>
+
+<div class="overlay" id="auth"><div class="box"><b data-t="tokenTitle"></b><div class="muted" style="font-size:13px" data-t="tokenHelp"></div><input id="token" type="password" autocomplete="off"><button class="btn" id="token-save" data-t="save"></button></div></div>
+
+<script>
+"use strict";
+// ── 文案 ────────────────────────────────────────────────────────────────────
+const TEXT = {
+  zh: {live:"实时", replay:"回放", turns:"轮次", calls:"模型调用", cost:"费用", newSession:"新会话", conversation:"对话", database:"数据库",
+       business:"业务数据", sessionState:"会话状态", snapshot:"快照", trace:"轨迹", traceHint:"多 Agent 编排", lgNode:"节点", lgModel:"模型",
+       lgTool:"工具", lgMemory:"记忆", tokenTitle:"需要管理员 Token", tokenHelp:"服务启用了鉴权，控制台的数据接口只对管理员开放。Token 只保存在本浏览器。",
+       save:"保存", placeholder:"输入消息，Enter 发送", search:"搜索当前数据…", greeting:"你好！我是 Kora 客服，有什么可以帮你？",
+       stage:{intent:"正在理解问题…", knowledge:"正在查知识库…", answer:"正在回复…", tool:"正在查资料…"}, sending:"发送中…",
+       viewTrace:"查看轨迹", noTurn:"还没有对话。发一条消息，这里会画出它经过的节点和每一步的耗时。", changes:"本轮变化", noChanges:"本轮没有数据变化。",
+       conversationCard:"会话", entities:"业务字段", summary:"会话摘要", noSummary:"还没有摘要（工作记忆满 15 条后自动压缩）", working:"工作记忆 · Redis",
+       profile:"用户画像 · ChromaDB", noProfile:"暂无画像（对话后在后台生成，可能要等几秒）", episodic:"情景记忆 · ChromaDB", none:"无", rawJson:"原始 JSON",
+       knowledge:"知识库 · ChromaDB", chunks:"片段", cited:"本轮检索到", docs:"篇", replayList:"已保存的会话（Redis，保留 24 小时）", noReplay:"没有已保存的会话。",
+       replayOnly:"回放只显示最终状态", messages:"条消息", liveSnap:"实时", model:"模型", tool:"工具", failed:"失败", user:"用户", assistant:"客服",
+       newMsgs:n=>`+${n} 条消息进入工作记忆`, fieldSet:(k,v)=>`业务字段 ${k} = ${v}`, fieldClr:k=>`业务字段 ${k} 已清空`, summaryUpd:"会话摘要已更新",
+       profileUpd:"用户画像已更新", episodicAdd:n=>`情景记忆 +${n}`, domain:"业务领域",
+       steps:{memory_read:"读取 Redis 工作记忆和业务字段，以及 ChromaDB 画像和情景记忆", compose:"汇总多个 Agent 的结果", commit:"写入 Redis：用户消息、回复、回执和本轨迹"},
+       primary:"主", supporting:"辅助", queries:"路查询", results:"条资料", clarify:"先追问澄清", fallback:"降级", scores:"领域得分", reason:"路由依据",
+       sources:"三路得分", firstToken:"首字", status:"状态", entitiesFound:"提取的实体", escalated:"已升级人工", unreachable:"连不上 Kora 服务",
+       handoff:"固定交接流程，不调用模型。"},
+  en: {live:"Live", replay:"Replay", turns:"Turns", calls:"Model calls", cost:"Cost", newSession:"New session", conversation:"Conversation", database:"Database",
+       business:"Business", sessionState:"Session state", snapshot:"Snapshot", trace:"Trace", traceHint:"multi-agent orchestration", lgNode:"node", lgModel:"model",
+       lgTool:"tool", lgMemory:"memory", tokenTitle:"Admin token required", tokenHelp:"Auth is enabled; console data endpoints are admin-only. The token stays in this browser.",
+       save:"Save", placeholder:"Message the agent… (Enter to send)", search:"Search this data…", greeting:"Hi! I'm Kora support. How can I help you today?",
+       stage:{intent:"Understanding…", knowledge:"Searching the knowledge base…", answer:"Replying…", tool:"Looking things up…"}, sending:"Sending…",
+       viewTrace:"View trace", noTurn:"No turns yet. Send a message to see the nodes it passes and how long each step takes.", changes:"Changes in this turn", noChanges:"No data changed in this turn.",
+       conversationCard:"Conversation", entities:"Business fields", summary:"Summary", noSummary:"No summary yet (working memory is compressed at 15 messages)", working:"Working memory · Redis",
+       profile:"User profile · ChromaDB", noProfile:"No profile yet (built in the background after chatting)", episodic:"Episodic memory · ChromaDB", none:"none", rawJson:"Raw JSON",
+       knowledge:"Knowledge base · ChromaDB", chunks:"chunks", cited:"retrieved this turn", docs:"docs", replayList:"Saved conversations (Redis, kept 24 h)", noReplay:"No saved conversations.",
+       replayOnly:"Replay shows the final state only", messages:"messages", liveSnap:"live", model:"model", tool:"tool", failed:"failed", user:"user", assistant:"agent",
+       newMsgs:n=>`+${n} messages in working memory`, fieldSet:(k,v)=>`field ${k} = ${v}`, fieldClr:k=>`field ${k} cleared`, summaryUpd:"summary updated",
+       profileUpd:"user profile updated", episodicAdd:n=>`episodic memory +${n}`, domain:"domain",
+       steps:{memory_read:"read Redis working memory and fields, plus ChromaDB profile and episodic memory", compose:"merge the agents' results", commit:"write to Redis: user message, reply, receipt and this trace"},
+       primary:"primary", supporting:"supporting", queries:"queries", results:"results", clarify:"ask to clarify first", fallback:"fallback", scores:"domain scores", reason:"routing reason",
+       sources:"source scores", firstToken:"first token", status:"status", entitiesFound:"entities", escalated:"escalated", unreachable:"Cannot reach Kora",
+       handoff:"Fixed handoff, no model call."},
+};
+const SAMPLES = {zh:["退款审核通过后多久能到账？","那如果是信用卡呢","登录失败，还被重复扣款了","一点开相册就闪退","有人正在盗刷我的卡！","你们服务真不错，谢谢"],
+                 en:["How long does a refund take after approval?","What about credit cards?","Login failed and I was charged twice","Someone is using my card right now!","Thanks, great service"]};
+const PRICE = [["claude-opus-5",4,20],["claude-sonnet-5",2,10],["claude-haiku-5",.1,.5]];
+
+// ── 状态 ────────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const S = {lang: localStorage.getItem("kora_lang") || "zh", mode:"live", userId:"console_user", convId:null, turns:[], current:-1,
+           snaps:[], snap:-1, dbTab:"session", knowledge:[], agents:{}, busy:false, replayId:null, filter:""};
+const t = key => TEXT[S.lang][key];
+
+function esc(text) { return String(text ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function md(text) { return esc(text).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/^#{1,4} (.+)$/gm, "<strong>$1</strong>"); }
+function ms(value) { return value == null ? "—" : value >= 1000 ? (value / 1000).toFixed(1) + "s" : Math.round(value) + "ms"; }
+function short(text, n = 60) { text = String(text ?? ""); return text.length > n ? text.slice(0, n) + "…" : text; }
+function el(html) { const box = document.createElement("div"); box.innerHTML = html.trim(); return box.firstElementChild; }
+function uuid() { return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2); }
+function cost(calls) {
+  let total = 0;
+  for (const call of calls || []) {
+    const price = PRICE.find(([prefix]) => (call.model || "").startsWith(prefix));
+    if (price) total += (call.input_tokens || 0) * price[1] / 1e6 + (call.output_tokens || 0) * price[2] / 1e6;
+  }
+  return total;
+}
+function llmOf(turn) { return (turn.trace && turn.trace.llm_calls) || ((turn.done || {}).performance || {}).llm_calls || []; }
+
+async function api(path, options = {}) {
+  const token = localStorage.getItem("kora_token");
+  const headers = {...(options.headers || {}), ...(token ? {Authorization: `Bearer ${token}`} : {})};
+  const response = await fetch(path, {...options, headers});
+  if (response.status === 401 || response.status === 403) { $("auth").classList.add("show"); throw new Error(String(response.status)); }
+  return response;
+}
+async function json(path) { const r = await api(path); if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }
+
+// ── 文案切换 ────────────────────────────────────────────────────────────────
+function applyText() {
+  document.documentElement.lang = S.lang === "zh" ? "zh-CN" : "en";
+  document.querySelectorAll("[data-t]").forEach(node => { node.textContent = t(node.dataset.t); });
+  $("input").placeholder = t("placeholder");
+  $("search").placeholder = t("search");
+  $("lang").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.lang === S.lang));
+  $("samples").innerHTML = "";
+  for (const sample of SAMPLES[S.lang]) {
+    const button = el(`<button type="button">${esc(sample)}</button>`);
+    button.onclick = () => send(sample);
+    $("samples").appendChild(button);
+  }
+  renderAll();
+}
+
+// ── 对话 ────────────────────────────────────────────────────────────────────
+function renderChat() {
+  const box = $("chat");
+  $("input").disabled = $("send").disabled = S.mode === "replay" || S.busy;
+  $("conv-hint").textContent = S.mode === "replay" ? t("replayOnly") : "中文 / English";
+  if (S.mode === "replay" && S.replayId == null) return renderReplayList();
+  box.innerHTML = "";
+  const id = S.mode === "replay" ? S.replayId : S.convId;
+  box.appendChild(el(`<div class="who"><div class="avatar">${S.mode === "replay" ? "R" : "CU"}</div><div><b>${esc(S.mode === "replay" ? t("replay") : S.userId)}</b>
+    <span class="mono">${esc(id ? short(id, 28) : "—")}</span></div></div>`));
+  if (S.mode === "live") box.appendChild(el(`<div class="msg bot"><div class="bubble">${esc(t("greeting"))}</div></div>`));
+  S.turns.forEach((turn, index) => {
+    box.appendChild(el(`<div class="msg user"><div class="bubble">${esc(turn.message)}</div></div>`));
+    const bot = el(`<div class="msg bot ${index === S.current ? "active" : ""}"><div class="bubble">${md(turn.text || "")}</div><div class="caption"></div></div>`);
+    const caption = bot.querySelector(".caption");
+    if (turn.pending) caption.innerHTML = `<span class="typing">${esc(turn.status || t("sending"))}</span>`;
+    else if (turn.error) caption.innerHTML = `<span class="chip bad">${esc(turn.error)}</span>`;
+    else if (turn.done) {
+      const d = turn.done;
+      caption.innerHTML = `<span class="chip">${esc(d.intent)}</span><span class="chip">${esc([d.primary_agent, ...(d.supporting_agents || [])].join(" + "))}</span>`
+        + (d.escalated ? `<span class="chip warn">${esc(t("escalated"))}</span>` : "") + `<span>${ms(d.latency_ms)}</span><a>${esc(t("viewTrace"))} →</a>`;
+      caption.querySelector("a").onclick = () => selectTurn(index);
+    }
+    box.appendChild(bot);
+  });
+  box.scrollTop = box.scrollHeight;
+}
+
+async function renderReplayList() {
+  const box = $("chat");
+  box.innerHTML = `<div class="label" style="margin-top:0">${esc(t("replayList"))}</div>`;
+  try {
+    const data = await json("/admin/conversations?limit=100");
+    if (!data.items.length) box.appendChild(el(`<div class="empty">${esc(t("noReplay"))}</div>`));
+    for (const item of data.items) {
+      const card = el(`<div class="replay-item"><div class="mono muted" style="font-size:12px">${esc(short(item.id, 16))} · ${item.messages} ${esc(t("messages"))} · ${esc((item.last_ts || "").replace("T", " ").slice(0, 19))}</div>
+        <div class="clamp">${esc(item.last_message)}</div></div>`);
+      card.onclick = () => loadReplay(item.id);
+      box.appendChild(card);
+    }
+  } catch (error) { box.appendChild(el(`<div class="empty">${esc(error.message)}</div>`)); }
+}
+
+async function loadReplay(id) {
+  const data = await json(`/admin/conversations/${id}`);
+  S.replayId = id;
+  S.turns = data.turns.filter(turn => turn.user != null).map(turn => ({message: turn.user, text: turn.assistant || "", done: turn.response, trace: null}));
+  S.snaps = [{label: t("liveSnap"), session: data}];
+  S.snap = 0;
+  await Promise.all(S.turns.map(loadTrace));
+  S.current = S.turns.length - 1;
+  renderAll();
+}
+
+async function loadTrace(turn) {
+  const id = turn.done && turn.done.request_id;
+  if (!id) return;
+  try { const data = await json(`/trace/tool/${encodeURIComponent(id)}`); if (data.found) turn.trace = data.trace; } catch (_) {}
+}
+
+async function send(message) {
+  message = message.trim();
+  if (!message || S.busy || S.mode !== "live") return;
+  S.busy = true;
+  if (!S.convId) S.convId = uuid();
+  const turn = {message, text:"", pending:true, status:t("sending")};
+  S.turns.push(turn);
+  S.current = S.turns.length - 1;
+  renderChat();
+  try {
+    const response = await api("/chat/stream", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({message, user_id:S.userId, conv_id:S.convId, client_request_id:uuid()})});
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+    let buffer = "";
+    for (let part; !(part = await reader.read()).done;) {
+      buffer += part.value;
+      const blocks = buffer.split("\n\n");
+      buffer = blocks.pop();
+      for (const block of blocks) {
+        const event = /^event: (.+)$/m.exec(block)?.[1];
+        if (!event) continue;
+        const data = JSON.parse(/^data: (.+)$/m.exec(block)[1]);
+        if (event === "status") turn.status = t("stage")[data.stage] || data.stage;
+        else if (event === "delta") turn.text += data.text;
+        else if (event === "reset") turn.text = "";
+        else if (event === "done") { turn.text = data.response; turn.done = data; }
+        else if (event === "error") { turn.text = ""; turn.error = `${data.status} · ${data.detail}`; }
+        updateBubble(turn);
+      }
+    }
+  } catch (error) { turn.error = error.message; }
+  turn.pending = false;
+  if (turn.done) await Promise.all([loadTrace(turn), takeSnapshot()]);
+  S.busy = false;
+  renderAll();
+  $("input").focus();
+}
+
+function updateBubble(turn) {
+  const bots = $("chat").querySelectorAll(".msg.bot");
+  const bot = bots[bots.length - 1];
+  if (!bot) return;
+  bot.querySelector(".bubble").innerHTML = md(turn.text);
+  if (turn.pending) bot.querySelector(".caption").innerHTML = `<span class="typing">${esc(turn.status)}</span>`;
+  $("chat").scrollTop = $("chat").scrollHeight;
+}
+
+// ── 数据库 ──────────────────────────────────────────────────────────────────
+async function takeSnapshot() {
+  try {
+    const session = await json(`/admin/session?user_id=${encodeURIComponent(S.userId)}&conv_id=${encodeURIComponent(S.convId)}`);
+    S.snaps.push({session});
+    S.snap = S.snaps.length - 1;
+  } catch (_) {}
+}
+
+function diff(before, after) {
+  const out = [];
+  if (!after) return out;
+  const prev = before || {messages:[], state:{}, summary:"", profile:{}, episodic:[]};
+  const added = (after.messages || []).length - (prev.messages || []).length;
+  if (added > 0) out.push(t("newMsgs")(added));
+  const oldFields = (prev.state || {}).entities || {}, newFields = (after.state || {}).entities || {};
+  for (const key of new Set([...Object.keys(oldFields), ...Object.keys(newFields)])) {
+    if (JSON.stringify(oldFields[key] || []) !== JSON.stringify(newFields[key] || []))
+      out.push((newFields[key] || []).length ? t("fieldSet")(key, newFields[key].join(", ")) : t("fieldClr")(key));
+  }
+  if ((prev.summary || "") !== (after.summary || "")) out.push(t("summaryUpd"));
+  if (JSON.stringify(prev.profile || {}) !== JSON.stringify(after.profile || {})) out.push(t("profileUpd"));
+  const episodes = (after.episodic || []).length - (prev.episodic || []).length;
+  if (episodes > 0) out.push(t("episodicAdd")(episodes));
+  return out;
+}
+
+function citedTitles() {
+  const turn = S.turns[S.current];
+  const calls = (turn && turn.trace && turn.trace.tool_calls) || [];
+  return new Set(calls.flatMap(call => call.result_titles || []));
+}
+
+function renderDb() {
+  document.querySelectorAll("#db-tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === S.dbTab));
+  const snaps = $("snaps");
+  snaps.innerHTML = "";
+  if (S.mode === "live") snaps.appendChild(el(`<button disabled>T0</button>`));
+  S.snaps.forEach((snap, index) => {
+    const label = S.mode === "live" ? `T${index + 1}${index === S.snaps.length - 1 ? " · " + t("liveSnap") : ""}` : t("liveSnap");
+    const button = el(`<button class="${index === S.snap ? "on" : ""}">${esc(label)}</button>`);
+    button.onclick = () => { S.snap = index; renderDb(); };
+    snaps.appendChild(button);
+  });
+  const current = S.snaps[S.snap], previous = S.mode === "live" ? S.snaps[S.snap - 1] : null;
+  const changes = current && S.mode === "live" ? diff(previous && previous.session, current.session) : [];
+  const badge = $("change-badge");
+  badge.hidden = !changes.length;
+  badge.textContent = changes.length;
+  const box = $("db");
+  box.innerHTML = "";
+  if (S.dbTab === "business") renderBusiness(box); else renderSession(box, current, changes);
+  applyFilter();
+}
+
+function card(kind, name, sub, body, {open = false, cls = "", chips = ""} = {}) {
+  const node = el(`<div class="card ${cls} ${open ? "open" : ""}"><div class="card-head"><span class="kind">${esc(kind)}</span><span class="name">${esc(name)}</span>
+    <span class="sub">${esc(sub)}</span>${chips}</div><div class="card-body"></div></div>`);
+  const target = node.querySelector(".card-body");
+  if (typeof body === "string") target.innerHTML = body; else target.appendChild(body);
+  node.querySelector(".card-head").onclick = () => node.classList.toggle("open");
+  return node;
+}
+
+function renderSession(box, current, changes) {
+  if (S.mode === "live") {
+    box.appendChild(el(`<div class="label" style="margin-top:0">${esc(t("changes"))} · T${S.snap + 1}</div>`));
+    box.appendChild(el(`<div class="changes">${changes.length ? `<ul>${changes.map(c => `<li>${esc(c)}</li>`).join("")}</ul>` : esc(current ? t("noChanges") : t("noTurn"))}</div>`));
+  }
+  if (!current) return;
+  const s = current.session, state = s.state || {}, fields = state.entities || {}, sources = state.sources || {};
+  box.appendChild(el(`<div class="label">${esc(t("conversationCard"))}</div>`));
+  const info = el(`<div><dl class="kv"><dt>user_id</dt><dd class="mono">${esc(s.user_id || "—")}</dd><dt>conv_id</dt><dd class="mono">${esc(s.conv_id || "—")}</dd>
+    <dt>Redis key</dt><dd class="mono">wm_v2:${esc(short(s.id, 16))}</dd><dt>${esc(t("domain"))}</dt><dd>${esc(state.domain || "—")}</dd></dl>
+    <details style="margin-top:6px"><summary class="muted" style="cursor:pointer">+ ${esc(t("rawJson"))}</summary><pre class="json"></pre></details></div>`);
+  info.querySelector("pre").textContent = JSON.stringify(s, null, 2);
+  box.appendChild(card("SESSION", short(s.conv_id || s.id, 18), `${(s.messages || []).length} ${t("messages")}`, info, {open:true}));
+
+  box.appendChild(el(`<div class="label">${esc(t("entities"))} · state_v1</div>`));
+  const keys = Object.keys(fields), filled = keys.filter(k => (fields[k] || []).length);
+  const fieldBody = keys.length ? `<dl class="kv">${keys.map(k => `<dt class="mono">${esc(k)}</dt><dd>${(fields[k] || []).length ? esc(fields[k].join(", "))
+    : `<span class="muted">${esc(t("none"))}</span>`}${sources[k] ? ` <span class="muted mono" style="font-size:11px">← ${esc(short(sources[k], 8))}</span>` : ""}</dd>`).join("")}</dl>`
+    : `<div class="empty">${esc(t("none"))}</div>`;
+  box.appendChild(card("FIELDS", `${filled.length} / ${keys.length}`, filled.map(k => `${k}=${fields[k].join(",")}`).join(" · "), fieldBody, {open: filled.length > 0}));
+
+  box.appendChild(el(`<div class="label">${esc(t("summary"))} · summary_v2</div>`));
+  box.appendChild(card("SUMMARY", s.summary ? short(s.summary, 24) : "—", "", s.summary ? `<div>${esc(s.summary)}</div>` : `<div class="empty">${esc(t("noSummary"))}</div>`));
+
+  box.appendChild(el(`<div class="label">${esc(t("working"))} · ${(s.messages || []).length}</div>`));
+  const prevCount = S.mode === "live" && S.snaps[S.snap - 1] ? S.snaps[S.snap - 1].session.messages.length : 0;
+  const list = el(`<div></div>`);
+  (s.messages || []).forEach((m, i) => list.appendChild(el(`<div class="mem ${S.mode === "live" && i >= prevCount ? "new" : ""}"><span class="role">${esc(m.role === "user" ? t("user") : t("assistant"))}</span><span class="clamp">${esc(m.content)}</span></div>`)));
+  box.appendChild(card("REDIS", "wm_v2", `${(s.messages || []).length} ${t("messages")}`, list, {open:true}));
+
+  if (S.mode === "live") {
+    box.appendChild(el(`<div class="label">${esc(t("profile"))}</div>`));
+    const hasProfile = s.profile && Object.keys(s.profile).length;
+    const pre = el(`<pre class="json"></pre>`);
+    pre.textContent = JSON.stringify(s.profile || {}, null, 2);
+    box.appendChild(card("PROFILE", s.user_id || "—", hasProfile ? "" : t("noProfile"), hasProfile ? pre : `<div class="empty">${esc(t("noProfile"))}</div>`, {open: !!hasProfile}));
+    box.appendChild(el(`<div class="label">${esc(t("episodic"))} · ${(s.episodic || []).length}</div>`));
+    if (!(s.episodic || []).length) box.appendChild(el(`<div class="empty">${esc(t("none"))}</div>`));
+    for (const item of s.episodic || []) box.appendChild(card("EPISODE", short(item.time || "", 19), short(item.content, 50), `<div>${esc(item.content)}</div>`));
+  }
+}
+
+function renderBusiness(box) {
+  const cited = citedTitles(), docs = new Map();
+  for (const chunk of S.knowledge) {
+    const key = chunk.document_id || chunk.title;
+    if (!docs.has(key)) docs.set(key, {title: chunk.title, id: chunk.document_id, chunks: []});
+    docs.get(key).chunks.push(chunk);
+  }
+  const list = [...docs.values()].sort((a, b) => (cited.has(b.title) - cited.has(a.title)) || a.title.localeCompare(b.title));
+  box.appendChild(el(`<div class="label" style="margin-top:0">${esc(t("knowledge"))} · ${list.length} ${esc(t("docs"))} / ${S.knowledge.length} ${esc(t("chunks"))}</div>`));
+  if (!list.length) box.appendChild(el(`<div class="empty">${esc(t("none"))}</div>`));
+  for (const doc of list) {
+    const body = doc.chunks.map(c => `<div class="mem"><span class="role mono">#${c.chunk}</span>${esc(c.content)}</div>`).join("");
+    const isCited = cited.has(doc.title);
+    box.appendChild(card("DOC", doc.title, `${doc.chunks.length} ${t("chunks")} · ${doc.id || ""}`, body,
+      {cls: isCited ? "cited" : "", chips: isCited ? `<span class="chip ok">${esc(t("cited"))}</span>` : ""}));
+  }
+}
+
+function applyFilter() {
+  const query = S.filter.trim().toLowerCase();
+  $("db").querySelectorAll(".card").forEach(node => { node.style.display = !query || node.textContent.toLowerCase().includes(query) ? "" : "none"; });
+}
+
+// ── 轨迹：流程图 ────────────────────────────────────────────────────────────
+const NODES = {
+  input:{x:44,y:26,w:64,label:"input"}, memory:{x:142,y:26,w:96,label:"memory_read"}, intent:{x:254,y:26,w:72,label:"intent"},
+  route:{x:356,y:26,w:66,label:"route"}, prefetch:{x:480,y:26,w:92,label:"kb_prefetch"},
+  general:{x:150,y:104,w:72,label:"general"}, technical:{x:262,y:104,w:84,label:"technical"}, billing:{x:376,y:104,w:68,label:"billing"},
+  escalation:{x:500,y:104,w:88,label:"escalation"},
+  compose:{x:190,y:184,w:76,label:"compose"}, commit:{x:330,y:184,w:66,label:"commit"}, reply:{x:470,y:184,w:58,label:"reply"},
+};
+const EDGES = [["input","memory"],["memory","intent"],["intent","route"],["route","prefetch"],["prefetch","general"],["prefetch","technical"],["prefetch","billing"],
+  ["route","escalation"],["general","compose"],["technical","compose"],["billing","compose"],["general","commit"],["technical","commit"],
+  ["billing","commit"],["escalation","commit"],["compose","commit"],["commit","reply"],["route","reply"]];
+const AGENTS = ["general","technical","billing","escalation"];
+
+function path(turn) {
+  const on = new Set(), edges = new Set();
+  if (!turn || !turn.done) return {on, edges, clarify:false};
+  const trace = turn.trace || {}, calls = trace.tool_calls || [], done = turn.done;
+  const agents = new Set([trace.primary_agent || done.primary_agent, ...(trace.supporting_agents || done.supporting_agents || [])].filter(Boolean));
+  calls.filter(c => c.event === "agent_fallback").forEach(c => agents.add(c.to_agent));
+  const clarify = !llmOf(turn).some(c => (c.stage || "").startsWith("agent.")) && /澄清|clarif/i.test(trace.routing_reason || "");
+  const prefetch = calls.some(c => c.event === "knowledge_prefetch");
+  ["input","memory","intent","route","reply"].forEach(n => on.add(n));
+  ["input>memory","memory>intent","intent>route"].forEach(e => edges.add(e));
+  if (clarify) { edges.add("route>reply"); return {on, edges, clarify}; }
+  on.add("commit"); edges.add("commit>reply");
+  if (prefetch) { on.add("prefetch"); edges.add("route>prefetch"); }
+  const multi = agents.size > 1;
+  for (const agent of agents) {
+    on.add(agent);
+    edges.add(agent === "escalation" ? "route>escalation" : prefetch ? `prefetch>${agent}` : `route>${agent}`);
+    edges.add(multi && agent !== "escalation" ? `${agent}>compose` : `${agent}>commit`);
+  }
+  if (multi) { on.add("compose"); edges.add("compose>commit"); }
+  return {on, edges, clarify};
+}
+
+function renderGraph() {
+  const {on, edges} = path(S.turns[S.current]);
+  const active = on.size > 0;
+  const anchor = (n, side) => { const node = NODES[n]; return side === "r" ? [node.x + node.w / 2, node.y] : side === "l" ? [node.x - node.w / 2, node.y] : side === "b" ? [node.x, node.y + 11] : [node.x, node.y - 11]; };
+  let svg = `<defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#c9ccc7"/></marker>
+    <marker id="arrow-on" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0f7b5f"/></marker></defs>
+    <text x="8" y="108" font-size="9.5" fill="#9aa09b" letter-spacing="1">ROLES</text>`;
+  for (const [a, b] of EDGES) {
+    const A = NODES[a], B = NODES[b], hot = edges.has(`${a}>${b}`);
+    let d;
+    if (a === "route" && b === "reply") { const [x1, y1] = anchor(a, "r"), [x2, y2] = anchor(b, "r"); d = `M${x1},${y1 + 4} C${x1 + 250},${y1 + 10} ${x2 + 110},${y2} ${x2 + 3},${y2}`; }
+    else if (A.y === B.y) { const [x1, y1] = anchor(a, "r"), [x2, y2] = anchor(b, "l"); d = `M${x1},${y1} L${x2 - 2},${y2}`; }
+    else { const [x1, y1] = anchor(a, "b"), [x2, y2] = anchor(b, "t"); const my = (y1 + y2) / 2; d = `M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2 - 2}`; }
+    svg += `<path d="${d}" fill="none" stroke="${hot ? "#0f7b5f" : "#dcdfd9"}" stroke-width="${hot ? 2 : 1}" ${a === "route" && b === "reply" ? 'stroke-dasharray="4 3"' : ""} marker-end="url(#${hot ? "arrow-on" : "arrow"})"/>`;
+  }
+  for (const [name, node] of Object.entries(NODES)) {
+    const hot = on.has(name), dim = active && !hot;
+    const stats = AGENTS.includes(name) ? S.agents[`${name}_0`] : null;
+    const tip = stats ? `${name}: ${stats.total} · ${Math.round(stats.success_rate * 100)}% · ${ms(stats.avg_ms)} · ${stats.recovery_state} · ${stats.model}` : name;
+    svg += `<g><title>${esc(tip)}</title><rect x="${node.x - node.w / 2}" y="${node.y - 11}" width="${node.w}" height="22" rx="11" fill="${hot ? "#fff" : "#fafaf8"}"
+      stroke="${hot ? "#0f7b5f" : "#d9dcd6"}" stroke-width="${hot ? 1.8 : 1}"/><text x="${node.x}" y="${node.y + 3.5}" font-size="10.5" text-anchor="middle"
+      fill="${dim ? "#b9bdb8" : hot ? "#0f5a46" : "#5d6560"}" font-weight="${hot ? 600 : 400}">${node.label}</text></g>`;
+    if (stats && stats.total) svg += `<text x="${node.x}" y="${node.y + 24}" font-size="8.5" text-anchor="middle" fill="#9aa09b">${stats.total}× · ${ms(stats.avg_ms)}</text>`;
+  }
+  $("graph").innerHTML = svg;
+}
+
+// ── 轨迹：步骤 ──────────────────────────────────────────────────────────────
+function scoreBar(name, value, max) {
+  return `<div class="scorebar"><span class="mono">${esc(name)}</span><span class="track"><span class="fill" style="width:${Math.max(0, Math.min(100, value / max * 100))}%"></span></span><span class="mono">${value.toFixed(2)}</span></div>`;
+}
+
+function renderTrace() {
+  renderGraph();
+  const box = $("trace");
+  box.innerHTML = "";
+  if (!S.turns.length) { box.appendChild(el(`<div class="empty">${esc(t("noTurn"))}</div>`)); return; }
+  const tabs = el(`<div class="turns"></div>`);
+  S.turns.forEach((turn, index) => {
+    const button = el(`<button class="${index === S.current ? "on" : ""}">Turn ${index + 1}</button>`);
+    button.onclick = () => selectTurn(index);
+    tabs.appendChild(button);
+  });
+  box.appendChild(tabs);
+  const turn = S.turns[S.current];
+  if (!turn || !turn.done) { box.appendChild(el(`<div class="empty">${esc(turn && turn.error ? turn.error : turn && turn.status || "")}</div>`)); return; }
+  const done = turn.done, trace = turn.trace || {}, perf = done.performance || {}, llm = llmOf(turn);
+  const tools = (trace.tool_calls || []).filter(c => !c.event && c.tool_name);
+  const timeline = trace.timeline || perf.timeline || [];
+  const total = trace.total_ms || done.latency_ms || 1;
+  box.appendChild(el(`<div class="summary"><q>${esc(short(turn.message, 70))}</q><span>${llm.length} ${esc(t("model"))} · ${tools.length} ${esc(t("tool"))} · ${ms(total)} · $${cost(llm).toFixed(4)}</span></div>`));
+
+  const stage = name => timeline.find(s => s.name === name);
+  const bar = (start, length) => start == null ? "" : `<div class="bar"><span style="left:${Math.min(99, start / total * 100)}%;width:${Math.max(.8, Math.min(100, (length || 0) / total * 100))}%"></span></div>`;
+  const step = ({icon = "", cls = "", name, detail = "", badge = "", time = null, start = null, body = "", open = false}) => {
+    const node = el(`<details class="step" ${open ? "open" : ""}><summary><span class="icon ${cls}">${icon}</span><span class="step-name">${esc(name)}</span>
+      <span class="step-detail">${esc(detail)}</span>${badge ? `<span class="chip">${esc(badge)}</span>` : ""}<span class="step-time">${ms(time)}</span>${bar(start, time)}</summary>
+      <div class="step-body"></div></details>`);
+    const target = node.querySelector(".step-body");
+    if (typeof body === "string") target.innerHTML = body || `<span class="muted">—</span>`; else target.appendChild(body);
+    box.appendChild(node);
+  };
+
+  const mem = stage("memory_read");
+  step({icon:"◆", cls:"mem", name:"memory_read", detail:t("steps").memory_read, time: mem && mem.ms, start: mem && mem.start_ms});
+
+  const intent = stage("intent"), scores = done.intent_source_scores || {};
+  step({icon:"◇", cls:"model", name:"intent", detail:`intent=${done.intent} · group=${done.intent_group} · ${Number(done.intent_confidence ?? 0).toFixed(2)}`,
+        badge: llm.some(c => c.stage === "intent") ? `1 ${t("model")}` : "", time: intent && intent.ms, start: intent && intent.start_ms,
+        body: `${Object.keys(scores).length ? `<div class="label" style="margin-top:0">${esc(t("sources"))}</div>${Object.entries(scores).map(([k, v]) => scoreBar(k, Number(v), 1)).join("")}` : ""}
+               <div class="label">${esc(t("entitiesFound"))}</div><pre class="json">${esc(JSON.stringify(done.entities || {}, null, 1))}</pre>`});
+
+  const reason = trace.routing_reason || "";
+  const domain = [...reason.matchAll(/(general|technical|billing)=([\d.]+)/g)];
+  const maxScore = Math.max(1, ...domain.map(m => Number(m[2])));
+  const {clarify} = path(turn);
+  const supporting = trace.supporting_agents || done.supporting_agents || [];
+  step({icon:"⑂", name:"route", detail: clarify ? t("clarify") : `${t("primary")} ${trace.primary_agent || done.primary_agent}${supporting.length ? ` · ${t("supporting")} ${supporting.join(", ")}` : ""}`,
+        badge: trace.routing_confidence != null ? Number(trace.routing_confidence).toFixed(2) : "",
+        body: `${domain.length ? `<div class="label" style="margin-top:0">${esc(t("scores"))}</div>${domain.map(m => scoreBar(m[1], Number(m[2]), maxScore)).join("")}` : ""}
+               <div class="label">${esc(t("reason"))}</div><div class="mono" style="font-size:12px;word-break:break-word">${esc(reason || "—")}</div>`});
+
+  const prefetch = (trace.tool_calls || []).find(c => c.event === "knowledge_prefetch");
+  if (prefetch) {
+    const queries = (prefetch.input || {}).queries || [];
+    step({icon:"▤", cls:"tool", name:"kb_prefetch", detail:`${prefetch.results} ${t("results")} · ${queries.length} ${t("queries")}${prefetch.error ? " · " + prefetch.error : ""}`,
+          time: prefetch.latency_ms, start: prefetch.start_ms,
+          body: queries.map(q => `<div class="sub"><span class="chip">query</span>${esc(q)}</div>`).join("") + (prefetch.result_titles || []).map(x => `<div class="sub"><span class="chip ok">doc</span>${esc(x)}</div>`).join("")});
+  }
+
+  const agentNames = [...new Set([...llm.filter(c => (c.stage || "").startsWith("agent.")).map(c => c.stage.slice(6)), ...tools.map(c => c.agent_type)])];
+  if (!agentNames.length && !clarify && (trace.primary_agent || done.primary_agent) === "escalation") agentNames.push("escalation");
+  for (const agent of agentNames) {
+    const calls = llm.filter(c => c.stage === `agent.${agent}`), used = tools.filter(c => c.agent_type === agent);
+    const items = [...calls.map(c => ({kind:"model", start:c.start_ms, c})), ...used.map(c => ({kind:"tool", start:c.start_ms, c}))].sort((a, b) => (a.start ?? 0) - (b.start ?? 0));
+    const starts = items.map(i => i.start).filter(v => v != null);
+    const begin = starts.length ? Math.min(...starts) : null;
+    const span = starts.length ? Math.max(...items.map(i => (i.start ?? 0) + (i.c.latency_ms || 0))) - begin : null;
+    const body = el(`<div></div>`);
+    let round = 0;
+    for (const item of items) {
+      if (item.kind === "model") {
+        round += 1;
+        body.appendChild(el(`<div class="sub"><span class="icon model small">◇</span><b class="mono">${esc(t("model"))} #${round}</b><span class="muted">${esc(item.c.model)} · in ${item.c.input_tokens ?? "?"} / out ${item.c.output_tokens ?? "?"}</span>
+          ${item.c.status !== "success" ? `<span class="chip bad">${esc(t("failed"))}</span>` : ""}<span class="spacer"></span><span class="step-time">${ms(item.c.latency_ms)}</span></div>`));
+      } else {
+        body.appendChild(el(`<div class="sub"><span class="icon tool small">▤</span><b class="mono">${esc(item.c.tool_name)}</b><span class="muted">${esc(short(JSON.stringify(item.c.input || {}), 50))}${(item.c.result_titles || []).length ? " → " + esc(item.c.result_titles.join("、")) : ""}</span>
+          ${item.c.success === false || item.c.result_success === false ? `<span class="chip bad">${esc(t("failed"))}</span>` : ""}<span class="spacer"></span><span class="step-time">${ms(item.c.latency_ms)}</span></div>`));
+      }
+    }
+    if (agent === "escalation") body.appendChild(el(`<div class="muted">${esc(t("handoff"))}</div>`));
+    const fallback = (trace.tool_calls || []).find(c => c.event === "agent_fallback" && c.to_agent === agent);
+    step({icon:"●", cls:"ok", name:agent, detail:`${calls.length} ${t("model")} · ${used.length} ${t("tool")}${fallback ? ` · ${t("fallback")} ← ${fallback.from_agent}` : ""}`,
+          badge: items.length > 1 ? `${items.length} steps` : "", time: span, start: begin, body});
+  }
+
+  const composeCall = llm.find(c => c.stage === "composer");
+  if (supporting.length) step({icon:"⇉", cls:"model", name:"compose", detail:t("steps").compose, badge: composeCall ? `1 ${t("model")}` : "",
+      time: composeCall && composeCall.latency_ms, start: composeCall && composeCall.start_ms});
+  if (!clarify) step({icon:"⤓", cls:"mem", name:"commit", detail:t("steps").commit});
+  const first = trace.first_token_ms ?? perf.first_token_ms;
+  step({icon:"✓", cls:"ok", name:"reply", detail:`${t("status")} ${done.status}${first != null ? ` · ${t("firstToken")} ${ms(first)}` : ""}`, time: total, start: 0,
+        body:`<div class="label" style="margin-top:0">PUBLISHED</div><div class="reply">${md(done.response || turn.text || "")}</div>`, open:true});
+}
+
+function selectTurn(index) { S.current = index; if (S.mode === "live" && S.snaps.length) S.snap = Math.min(index, S.snaps.length - 1); renderAll(); }
+
+// ── 顶栏与整体 ──────────────────────────────────────────────────────────────
+function renderHeader() {
+  const done = S.turns.filter(turn => turn.done), llm = done.flatMap(llmOf);
+  $("s-turns").textContent = done.length;
+  $("s-calls").textContent = llm.length;
+  $("s-cost").textContent = `$${cost(llm).toFixed(3)}`;
+  $("mode").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.mode === S.mode));
+}
+function renderAll() { renderHeader(); renderChat(); renderDb(); renderTrace(); }
+
+async function refreshMeta() {
+  try {
+    const [overview, agents, knowledge] = await Promise.all([json("/admin/overview"), json("/admin/agents"), json("/admin/knowledge?limit=500")]);
+    S.agents = agents.agents || {};
+    S.knowledge = knowledge.items || [];
+    $("conn").classList.add("on");
+    $("model").textContent = `Multi-agent · ${(overview.models.agents || []).join(", ")}`;
+  } catch (error) {
+    $("conn").classList.remove("on");
+    $("model").textContent = t("unreachable");
+  }
+  renderDb();
+  renderGraph();
+}
+
+$("form").onsubmit = event => { event.preventDefault(); const value = $("input").value; $("input").value = ""; send(value); };
+$("input").onkeydown = event => { if (event.key === "Enter" && !event.shiftKey && !event.isComposing) { event.preventDefault(); $("form").requestSubmit(); } };
+$("new-session").onclick = () => { if (S.busy) return; S.convId = null; S.turns = []; S.current = -1; S.snaps = []; S.snap = -1; S.replayId = null; renderAll(); };
+$("lang").onclick = event => { const lang = event.target.dataset.lang; if (lang) { S.lang = lang; localStorage.setItem("kora_lang", lang); applyText(); } };
+$("mode").onclick = event => {
+  const mode = event.target.dataset.mode;
+  if (!mode || mode === S.mode || S.busy) return;
+  S.mode = mode; S.replayId = null; S.turns = []; S.current = -1; S.snaps = []; S.snap = -1;
+  if (mode === "live") S.convId = null;
+  renderAll();
+};
+$("db-tabs").onclick = event => { const button = event.target.closest("button"); if (button) { S.dbTab = button.dataset.tab; renderDb(); } };
+$("search").oninput = event => { S.filter = event.target.value; applyFilter(); };
+$("token-save").onclick = () => { localStorage.setItem("kora_token", $("token").value.trim()); $("auth").classList.remove("show"); refreshMeta(); };
+
+applyText();
+refreshMeta();
+setInterval(() => { if (!S.busy) json("/admin/agents").then(a => { S.agents = a.agents || {}; renderGraph(); }).catch(() => {}); }, 15000);
+</script>
+</body>
+</html>

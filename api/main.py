@@ -23,9 +23,13 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Response, UploadFile, File, Query, Request as HTTPRequest
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, StreamingResponse
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from pydantic import BaseModel, Field
+from core.language import text as localized
+from core.llm_utils import fast_model
 from core.performance import collect_performance, measure_stage, performance_snapshot
+from core.streaming import Emitter
 
 load_dotenv(pathlib.Path(_ROOT) / '.env')
 
@@ -48,6 +52,7 @@ _profile_updater = None
 _mcp_client = None
 from evaluation.jobs import EvaluationJobs
 _eval_jobs = EvaluationJobs()
+_stream_turns: set = set()      # 正在执行的流式对话；客户端断开后仍会执行完并入库
 
 def _flag(name: str, default: str = "false") -> bool:
     return os.getenv(name, default).strip().lower() in {"1", "true", "yes", "on"}
@@ -84,7 +89,8 @@ async def lifespan(app: FastAPI):
     from core.skill_loader import SkillManager
 
     cfg = _anthropic_cfg()
-    logger.info(f"模型: {cfg['model']}  base_url: {cfg.get('base_url', '(官方)')}")
+    support_model = fast_model(cfg["model"])
+    logger.info(f"模型: {cfg['model']}  辅助模型: {support_model}  base_url: {cfg.get('base_url', '(官方)')}")
 
     # 知识库、记忆和意图向量共用同一个本地多语言模型
     from core.embedding import load_embedder
@@ -94,7 +100,7 @@ async def lifespan(app: FastAPI):
     recognizer = IntentRecognizer(
         api_key=cfg["api_key"],
         base_url=cfg.get("base_url"),
-        model=cfg["model"],
+        model=support_model,
     )
 
     # Skills：启动时从目录加载业务能力说明，并在 Agent 调用 LLM 时动态注入。
@@ -121,7 +127,7 @@ async def lifespan(app: FastAPI):
         chroma_path=os.getenv("CHROMA_PERSIST_DIRECTORY", "/app/data/chroma"),
         api_key=cfg["api_key"],
         base_url=cfg.get("base_url"),
-        model=cfg["model"],
+        model=support_model,
         embedder=embedder,
     )
 
@@ -129,7 +135,7 @@ async def lifespan(app: FastAPI):
     _tool_manager = MCPToolManager(
         api_key=cfg["api_key"],
         base_url=cfg.get("base_url"),
-        model=cfg["model"],
+        model=support_model,
     )
     _tool_manager.rag_rewrite = _flag("KORA_RAG_REWRITE")
     _tool_manager.rag_rerank = _flag("KORA_RAG_RERANK")
@@ -192,6 +198,9 @@ async def lifespan(app: FastAPI):
     _eval_orchestrator = AgentOrchestrator(api_key=cfg["api_key"], base_url=cfg.get("base_url"),
         model=cfg["model"], skill_manager=_skill_manager)
     _refresh_agent_tools()
+    if _flag("KORA_PREFETCH_KNOWLEDGE", "true"):
+        _orchestrator.set_knowledge_prefetch(_knowledge_prefetch(_tool_manager))
+        _eval_orchestrator.set_knowledge_prefetch(_knowledge_prefetch(_eval_tool_manager))
     _evaluator = EndToEndEvaluator(
         orchestrator=_eval_orchestrator,
         recognizer=recognizer,
@@ -209,6 +218,9 @@ async def lifespan(app: FastAPI):
         try:
             yield
         finally:
+            for task in list(_stream_turns):
+                task.cancel()
+            await asyncio.gather(*_stream_turns, return_exceptions=True)
             await _eval_jobs.close()
             await _profile_updater.close()
             await _mcp_client.close()
@@ -217,6 +229,11 @@ async def lifespan(app: FastAPI):
                 await _memory.close()
             configure(None)
             logger.info("Kora 已关闭")
+
+
+def _knowledge_prefetch(manager):
+    """预取只做一次向量检索，不走可能调用模型的改写与重排。"""
+    return lambda query: manager.call("knowledge_search", {"query": query, "top_k": 5})
 
 
 def _refresh_agent_tools():
@@ -262,30 +279,44 @@ app.add_middleware(
 @app.middleware("http")
 async def access_control(request: HTTPRequest, call_next):
     from core.access import identity
-    from fastapi.responses import JSONResponse
     try:
         account = identity(request.headers.get("authorization", ""))
     except (ValueError, TypeError):
         return JSONResponse({"detail": "服务鉴权配置无效"}, status_code=503)
     request.state.account = account
-    if account is not None and request.url.path != "/health" and request.method != "OPTIONS":
+    # 控制台页面本身不含数据，数据接口仍按管理员鉴权。
+    public = request.url.path == "/health" or request.url.path == "/console" or request.url.path.startswith("/console/")
+    if account is not None and not public and request.method != "OPTIONS":
         if not account:
             return JSONResponse({"detail": "需要有效 Bearer Token"}, status_code=401)
-        reader = request.url.path in {"/chat", "/search", "/knowledge/stats", "/skills", "/mcp", "/mcp/"}
+        reader = request.url.path in {"/chat", "/chat/stream", "/search", "/knowledge/stats", "/skills", "/mcp", "/mcp/"}
         if not reader and account["role"] != "admin":
             return JSONResponse({"detail": "该接口需要管理员权限"}, status_code=403)
+    # 流式对话在响应头发出后才真正执行，由 _stream_turn 自己计时。
     is_chat = request.url.path == "/chat" and request.method == "POST"
     started = time.monotonic()
-    if is_chat and _monitor is not None and "requests_total" in _monitor._prom:
-        _monitor._prom["requests_total"].inc()
+    if is_chat:
+        _count_request()
     with collect_performance() if is_chat else nullcontext():
         response = await call_next(request)
     if is_chat:
         elapsed = (time.monotonic() - started) * 1000
         response.headers["Server-Timing"] = f"chat;dur={elapsed:.1f}"
-        if _monitor is not None and "chat_latency_ms" in _monitor._prom:
-            _monitor._prom["chat_latency_ms"].labels(status=str(response.status_code)).observe(elapsed)
+        _observe_chat(response.status_code, elapsed)
     return response
+
+
+def _count_request() -> None:
+    if _monitor is not None and "requests_total" in _monitor._prom:
+        _monitor._prom["requests_total"].inc()
+
+
+def _observe_chat(status: int, elapsed_ms: float, first_token_ms: Optional[float] = None) -> None:
+    metrics = _monitor._prom if _monitor is not None else {}
+    if "chat_latency_ms" in metrics:
+        metrics["chat_latency_ms"].labels(status=str(status)).observe(elapsed_ms)
+    if first_token_ms is not None and "chat_first_token_ms" in metrics:
+        metrics["chat_first_token_ms"].observe(first_token_ms)
 
 
 # ── 请求/响应模型 ─────────────────────────────────────────────────────────────
@@ -365,23 +396,67 @@ async def chat(req: ChatRequest, http_request: HTTPRequest):
     主对话接口。完整流程：
       记忆读取 → 意图识别 → Agent 路由 → 执行 → 记忆写入
     """
+    reply = await _run_turn(_bind_account(req, http_request))
+    if reply.status == "failed":
+        return JSONResponse(reply.model_dump(), status_code=503)
+    return reply
+
+
+@app.post("/chat/stream")
+async def chat_stream(req: ChatRequest, http_request: HTTPRequest):
+    """
+    流式对话（SSE）。事件依次为 status、delta、reset、done / error，见 core/streaming.py。
+    客户端断开后本轮仍会执行完并入库；用同一 client_request_id 重试可取回结果。
+    """
+    req = _bind_account(req, http_request)
+    emitter = Emitter()
+    task = asyncio.create_task(_stream_turn(req, emitter))
+    _stream_turns.add(task)
+    task.add_done_callback(_stream_turns.discard)
+    return StreamingResponse(emitter.events(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+async def _stream_turn(req: ChatRequest, emitter: Emitter) -> None:
+    """后台执行一轮；响应头已是 200，失败只能用 error 事件表达。"""
+    started, status = time.monotonic(), 500
+    _count_request()
+    with collect_performance():
+        try:
+            reply = await _run_turn(req, emitter)
+            status = 503 if reply.status == "failed" else 200
+            emitter.send("done", reply.model_dump())
+        except HTTPException as ex:
+            status = ex.status_code
+            emitter.send("error", {"status": ex.status_code, "detail": ex.detail})
+        except asyncio.CancelledError:
+            status = 503
+            emitter.send("error", {"status": 503, "detail": "服务正在关闭"})
+            raise
+        except Exception:
+            logger.exception("流式对话失败")
+            emitter.send("error", {"status": 500, "detail": "服务内部错误"})
+        finally:
+            emitter.close()
+            _observe_chat(status, (time.monotonic() - started) * 1000, emitter.first_ms if status == 200 else None)
+
+
+def _bind_account(req: ChatRequest, http_request: HTTPRequest) -> ChatRequest:
     if _orchestrator is None or _memory is None:
         raise HTTPException(503, "服务未就绪")
-
     account = getattr(http_request.state, "account", None)
     if account:
         req.user_id = account["user_id"]
+    return req
+
+
+async def _run_turn(req: ChatRequest, emitter: Optional[Emitter] = None) -> ChatResponse:
+    """执行一轮对话；两个聊天接口共用，失败的回复由调用方决定怎样返回。"""
     from agents.agent_orchestrator import Request as OrcReq
 
     client_id = req.client_request_id or str(uuid.uuid4())
     conv_id = req.conv_id or str(uuid.uuid5(uuid.NAMESPACE_URL, req.user_id + ":" + client_id))
     started = time.monotonic()
-
-    def render(reply):
-        if reply.status == "failed":
-            from fastapi.responses import JSONResponse
-            return JSONResponse(reply.model_dump(), status_code=503)
-        return reply
 
     from core.concurrency import ConversationBusyError, LeaseLostError
     try:
@@ -392,7 +467,9 @@ async def chat(req: ChatRequest, http_request: HTTPRequest):
                     raise HTTPException(409, "同一 client_request_id 不能用于不同消息")
                 previous = ChatResponse(**receipt["response"])
                 if previous.status != "failed" or not previous.retryable:
-                    return render(previous)
+                    if emitter:
+                        emitter.finish(previous.response)
+                    return previous
             # 1. 读取记忆上下文
             with measure_stage("memory_read"):
                 mem_ctx = await _memory.get_context(req.user_id, conv_id, query=req.message)
@@ -403,6 +480,8 @@ async def chat(req: ChatRequest, http_request: HTTPRequest):
                 for m in mem_ctx.recent_messages[-5:]
             ] if mem_ctx.recent_messages else None
 
+            if emitter:
+                emitter.status("intent")
             with measure_stage("intent"):
                 intent_result = await _orchestrator.recognize_intent(req.message, history=history)
             full_context = mem_ctx.to_prompt_text()
@@ -419,12 +498,13 @@ async def chat(req: ChatRequest, http_request: HTTPRequest):
                 urgency=intent_result.urgency,
                 intent_confidence=intent_result.confidence,
                 conversation_state=getattr(mem_ctx, "state", {}),
+                emit=emitter,
             )
 
             async def before_unsafe_tool(name):
                 # 在产生副作用之前持久化；超时/崩溃后同一 ID 不会重放未知结果。
                 marker = ChatResponse(conv_id=conv_id, request_id=orch_req.request_id,
-                    response="该请求涉及可能修改数据的工具，请先核验执行结果再发起新的请求。",
+                    response=localized("outcome_unknown", orch_req.language),
                     intent=intent_result.intent.value, agent_type="unknown", escalated=False,
                     latency_ms=(time.monotonic() - started) * 1000,
                     status="failed", retryable=False, error_code="tool_outcome_unknown")
@@ -434,6 +514,11 @@ async def chat(req: ChatRequest, http_request: HTTPRequest):
             # 3. 执行
             with measure_stage("agent_execution"):
                 result = await _orchestrator.run(orch_req)
+            performance = performance_snapshot()
+            if emitter:
+                # 固定话术、兜底回复等没有流式输出过的正文在这里补发。
+                emitter.finish(result.response)
+                performance["first_token_ms"] = emitter.first_ms
 
             response = ChatResponse(
                 conv_id=conv_id,
@@ -458,13 +543,18 @@ async def chat(req: ChatRequest, http_request: HTTPRequest):
                 status=result.status,
                 retryable=result.retryable,
                 error_code=result.error_code,
-                performance=performance_snapshot(),
+                performance=performance,
             )
+            trace = _orchestrator.get_tool_trace(result.request_id)
+            if trace is not None:
+                # 时间线只有阶段名、模型、耗时和 token，不含对话内容。
+                trace = {**trace, "timeline": performance.get("timeline", []), "llm_calls": performance.get("llm_calls", []),
+                         "first_token_ms": performance.get("first_token_ms"), "total_ms": response.latency_ms}
             await _memory.commit_turn(req.user_id, conv_id, client_id, req.message, response.model_dump(),
-                                      _orchestrator.get_tool_trace(result.request_id), state=orch_req.conversation_state)
+                                      trace, state=orch_req.conversation_state)
             if response.status != "failed" and _profile_updater is not None:
                 _profile_updater.submit(req.user_id, conv_id)
-            return render(response)
+            return response
     except TimeoutError as ex:
         raise HTTPException(504, "本轮处理超过 50 秒，请使用相同 client_request_id 重试") from ex
     except (ConversationBusyError, LeaseLostError) as ex:
@@ -781,6 +871,17 @@ async def mcp_call(body: MCPCallInput):
 app.mount("/mcp", standard_mcp_app)
 
 
+def _console_parts():
+    return {"memory": _memory, "orchestrator": _orchestrator, "tool_manager": _tool_manager}
+
+
+from fastapi.staticfiles import StaticFiles
+from api.admin import build_router
+
+app.include_router(build_router(_console_parts))
+app.mount("/console", StaticFiles(directory=pathlib.Path(__file__).parent / "console", html=True), name="console")
+
+
 # ── 交互式 CLI ────────────────────────────────────────────────────────────────
 async def _cli():
     print("Kora CLI — 输入 quit 退出\n")
@@ -810,7 +911,7 @@ async def _cli():
         chroma_path=os.getenv("CHROMA_PERSIST_DIRECTORY", "/tmp/chroma"),
         api_key=cfg["api_key"],
         base_url=cfg.get("base_url"),
-        model=cfg["model"],
+        model=fast_model(cfg["model"]),
         embedder=embedder,
     )
 
@@ -818,7 +919,7 @@ async def _cli():
     from tooling.knowledge_base import KnowledgeBase
     from tooling.mcp_client import StandardMCPClient, load_servers
     from agents.tools import build_shared_rag_tools
-    manager = MCPToolManager(**cfg)
+    manager = MCPToolManager(**{**cfg, "model": fast_model(cfg["model"])})
     manager.rag_rewrite, manager.rag_rerank = _flag("KORA_RAG_REWRITE"), _flag("KORA_RAG_RERANK")
     kb = KnowledgeBase(chroma_host=os.getenv("CHROMA_HOST", "localhost"),
                        chroma_port=int(os.getenv("CHROMA_PORT", "8000")),
@@ -838,6 +939,8 @@ async def _cli():
     enabled = os.getenv("MCP_EXTERNAL_ENABLED", "true").lower() in {"1", "true", "yes"}
     bridge = StandardMCPClient(manager, load_servers(path) if enabled else [], refresh)
     refresh()
+    if _flag("KORA_PREFETCH_KNOWLEDGE", "true"):
+        orch.set_knowledge_prefetch(_knowledge_prefetch(manager))
     await bridge.start()
 
     user_id, conv_id = "cli_user", str(uuid.uuid4())

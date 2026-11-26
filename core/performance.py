@@ -19,7 +19,7 @@ def _aggregate(rows):
 
 @contextmanager
 def collect_performance():
-    trace = {"stages_ms": {}, "llm_calls": [], "events": {}}
+    trace = {"stages_ms": {}, "llm_calls": [], "events": {}, "timeline": [], "_t0": time.monotonic()}
     token = _current.set(trace)
     try:
         yield trace
@@ -35,8 +35,18 @@ def measure_stage(name):
         yield
     finally:
         if trace is not None:
+            elapsed = (time.monotonic() - started) * 1000
             stages = trace["stages_ms"]
-            stages[name] = stages.get(name, 0.0) + (time.monotonic() - started) * 1000
+            stages[name] = stages.get(name, 0.0) + elapsed
+            trace["timeline"].append({"name": name, "start_ms": offset_ms(started), "ms": round(elapsed, 1)})
+
+
+def offset_ms(moment=None):
+    """某一时刻距本轮开始的毫秒数；不在统计范围内时为 None。"""
+    trace = _current.get()
+    if trace is None:
+        return None
+    return round(((time.monotonic() if moment is None else moment) - trace["_t0"]) * 1000, 1)
 
 
 def record_event(name):
@@ -46,7 +56,7 @@ def record_event(name):
 
 
 def record_llm_call(stage, model, started, status, response=None):
-    row = {"stage": stage, "model": model, "status": status,
+    row = {"stage": stage, "model": model, "status": status, "start_ms": offset_ms(started),
            "latency_ms": round((time.monotonic() - started) * 1000, 1)}
     usage = getattr(response, "usage", None)
     for field in _token_fields:
@@ -66,6 +76,7 @@ def performance_snapshot():
     if trace is None:
         return {}
     result = copy.deepcopy(trace)
+    result.pop("_t0", None)
     result["stages_ms"] = {key: round(value, 1) for key, value in result["stages_ms"].items()}
     result["llm"] = _aggregate(result["llm_calls"])
     return result

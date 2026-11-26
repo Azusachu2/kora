@@ -246,6 +246,22 @@ def test_e2e_records_timeout_and_errors_without_losing_other_cases():
     assert bench.report_status('e2e', rows, []) == 'partial'
 
 
+def test_e2e_stream_records_first_token_and_mismatch():
+    class Orchestrator:
+        _intent_recognizer = SimpleNamespace(_cache={})
+
+        async def run(self, req):
+            req.emit.status('answer')
+            req.emit.delta('流出的半句' if req.conv_id.startswith('a') else '最终回复')
+            return SimpleNamespace(status='success', agent_types=[], tools_used=[], response='最终回复', tool_traces=[])
+
+    cases = [{'id': i, 'message': 'x', 'split': 'dev', 'tags': []} for i in 'ab']
+    rows = asyncio.run(bench.run_e2e(cases, Orchestrator(), stream=True))
+    assert [r['stream']['matched'] for r in rows] == [False, True] and all(r['first_token_ms'] is not None for r in rows)
+    assert rows[0]['stream']['events'] == 'status:answer delta reset delta'
+    summary = bench.summarize_e2e(rows)
+    assert summary['stream_mismatch'] == ['a'] and summary['first_token_ms']['n'] == 2
+
 # ── 统计与对比 ────────────────────────────────────────────────────────────────
 
 def test_statistics_helpers():

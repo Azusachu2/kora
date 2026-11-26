@@ -16,9 +16,12 @@ Kora 是面向客服场景的多 Agent 应用，提供通用咨询、技术支�
 | 真紧急识别（test 5 条） | 0/5 | 5/5 |
 | 中文检索 Hit@5（test 32 条，纯向量） | 34.4% | 96.9% |
 | 英文检索 Hit@5（test 20 条，纯向量） | 50.0% | 95.0% |
-| 一轮对话 P50 / P95（30 轮） | 13.5 / 16.5 秒 | 8.8 / 13.2 秒 |
+| 一轮对话 P50 / P95（30 轮） | 13.5 / 16.5 秒 | 8.0 / 13.8 秒 |
+| 每轮模型调用次数（30 轮） | 4.5 | 2.1 |
+| 每轮模型费用（30 轮，按 Opus 5.5 单价） | $0.046 | $0.029 |
+| 流式首字 P50（30 轮） | 无流式 | 3.8 秒 |
 
-评测方法、数据集和复现命令见[基准评测](#benchmark)。
+评测方法、数据集和复现命令见[基准评测](#benchmark)。不调用工具的 22 轮首字 P50 / P95 为 3.3 / 6.3 秒；另有 6 轮预取的资料不相关，Agent 换关键词再检索，这几轮调用工具后的回复正文几乎同时到达（复跑 3 轮均如此，流出内容与最终回复一致），首字约等于总耗时。
 
 ## 目录
 
@@ -43,7 +46,10 @@ Kora 是面向客服场景的多 Agent 应用，提供通用咨询、技术支�
 |---|---|
 | 三路意图识别 | LLM、向量相似度、Pattern 规则共同识别意图，输出领域、实体、紧急度和来源分数。 |
 | 主辅 Agent 路由 | 在 General、Technical、Billing、Escalation 之间选择处理路径；需要协作时并行执行主辅 Agent，再合成回复。 |
-| RAG 工具调用 | Agent 根据问题决定是否调用共享知识库工具，工具层完成检索、可选查询改写与重排。 |
+| RAG | 回答前先用用户原话检索一次知识库并交给 Agent；资料不足时 Agent 再自行调用检索工具。工具层提供可选的查询改写与重排。 |
+| 流式输出 | `POST /chat/stream` 以 SSE 逐段返回正文；工具调用、失败兜底和客户端断开都保证最终正文与入库一致。 |
+| 中英文 | 同一份中文知识库支持中英文提问；固定话术、安全提示和模型回复跟随用户语言。 |
+| 控制台 | `/console/` 三栏页面：对话、数据库（Redis 会话状态与 ChromaDB 知识库、画像、情景记忆，按轮次对比变化）、多 Agent 编排轨迹（流程图与逐步耗时），支持回放和中英文界面。 |
 | 分层记忆 | Redis 保存近期消息和摘要；ChromaDB 保存情景记忆及用户画像，为后续对话补充上下文。 |
 | 标准 MCP | 通过官方 Python SDK 接入外部 MCP 服务，也将本地知识库暴露给其他 MCP 客户端。 |
 | 动态 Skills | 从 Markdown 文件加载业务规范，根据 Agent 和关键词匹配后注入提示词，支持运行时重载。 |
@@ -58,7 +64,7 @@ Kora 是面向客服场景的多 Agent 应用，提供通用咨询、技术支�
 用户 / Web 前端 / HTTP 客户端
              |
              v
-POST /chat：鉴权、会话锁、重复请求回执检查
+POST /chat 或 /chat/stream：鉴权、会话锁、重复请求回执检查
              |
              v
 读取近期消息、摘要、相关情景记忆和用户画像
@@ -67,7 +73,7 @@ POST /chat：鉴权、会话锁、重复请求回执检查
 三路意图识别：LLM + Embedding + Pattern
              |
              v
-路由决策
+路由决策（需要回答时先预取知识库）
   |-- 需要澄清 ---------------------------> 澄清回复
   |-- 单 Agent --------------------------> 专业回复 / 失败回退
   `-- 主辅 Agent 并行 -------------------> 合成回复
@@ -84,7 +90,7 @@ Redis 事务写入用户消息、助手回复和响应回执
              `----------------------------> 后台记忆维护、画像更新
 ```
 
-**意图识别负责路由和提供上下文，RAG 由 Agent 通过工具自主调用。** 细粒度技术意图共享知识库，无需按每个意图维护一套文档。
+**意图识别负责路由和提供上下文。** 路由确定后先用用户原话检索一次知识库，结果随首次模型调用交给 Agent，省去“决定检索”那一轮；短追问会连同上一句再查一次并合并。资料不足时 Agent 仍可自行调用检索工具。寒暄、表扬和升级转人工不检索，其中寒暄和表扬也不提供工具。细粒度技术意图共享知识库，无需按每个意图维护一套文档。
 
 意图融合默认权重为 LLM 0.7、Embedding 0.2、Pattern 0.1。正常投票先累计同领域的粗、细意图分数，再选择领域内的意图；Pattern 细化要求领域一致。默认低置信度阈值为 0.5，另有识别失败和细化分支。权重与阈值定义在 [意图识别器](core/intent_recognizer.py)，不是 `.env` 配置项；应根据业务标注集验证后调整，不能将融合分数直接视为准确率。
 
@@ -197,6 +203,8 @@ docker compose --env-file ../Kora/.env up -d --build
 | `ANTHROPIC_API_KEY` | 必填，聊天、意图 LLM、摘要和 Judge 等使用的模型服务 Key。 |
 | `ANTHROPIC_BASE_URL` | Anthropic 兼容接口地址；留空时使用官方服务。 |
 | `ANTHROPIC_MODEL` | 当前服务支持的模型 ID，建议显式填写。 |
+| `KORA_FAST_MODEL` | 辅助调用（意图识别、查询改写与重排、记忆摘要和画像）使用的模型，默认留空即与主模型相同。换小模型前先用基准评测确认意图准确率。 |
+| `KORA_PREFETCH_KNOWLEDGE` / `KORA_PREFETCH_TIMEOUT_S` | 回答前是否预取知识库，默认 `true`；预取超时默认 2 秒，超时或失败时由 Agent 自行检索。 |
 | `REDIS_PASSWORD` | Compose 创建 Redis 时使用的密码。 |
 | `REDIS_URL` | 应用连接地址；根目录 Compose 根据 `REDIS_PASSWORD` 覆盖为容器网络地址。 |
 | `CHROMA_HOST` / `CHROMA_PORT` | Docker 使用 `chromadb:8000`；宿主机开发使用 `localhost:8001`。 |
@@ -364,18 +372,73 @@ docker compose exec -T kora python scripts/check_embedding.py
 | `intent`、`intent_group`、`entities` | 查看细粒度意图、领域及提取实体。 |
 | `intent_confidence`、`intent_source_scores` | 排查三路识别结果。 |
 | `primary_agent`、`supporting_agents`、`routing_reason` | 了解主辅 Agent 的选择和路由依据。 |
-| `tools_used`、`knowledge_used` | 查看工具使用情况；后者仅在知识库工具实际成功时为 true。 |
+| `tools_used`、`knowledge_used` | 前者是 Agent 主动调用的工具；后者表示本轮有知识库资料提供给模型（预取或工具检索到内容）。预取记录在轨迹的 `knowledge_prefetch` 事件中。 |
 | `intent_embedding_source` | 确认本次向量分支使用在线模型、本地模型还是 n-gram。 |
 | `performance` | 本轮记忆读取、意图和 Agent 执行耗时，以及模型逻辑调用数、供应商返回的 token 用量和检索缓存事件；不包含问题正文。 |
 | `status` | `success` 为完整回复，`partial` 表示回复截断或仅部分 Agent 成功，`failed` 为执行失败。 |
 | `retryable`、`error_code` | 执行失败返回 HTTP 503；仅 `retryable=true` 时可以复用请求 ID 重新执行。 |
 | `latency_ms` | 从进入聊天处理、等待会话锁到生成回复的耗时；完整 HTTP 耗时（含存储提交）见 `Server-Timing` 响应头。 |
 
+### 流式接收
+
+`POST /chat/stream` 的请求体与 `/chat` 相同，返回 SSE（`text/event-stream`）：
+
+| 事件 | 数据 | 处理方式 |
+|---|---|---|
+| `status` | `{"stage": "intent/knowledge/answer/tool"}` | 可用于显示“正在理解 / 查资料 / 回复”，不是正文。 |
+| `delta` | `{"text": "…"}` | 追加到正文。 |
+| `reset` | `{}` | 清空此前的正文：转去调用工具，或换 Agent 重新回答。 |
+| `done` | 完整的 `ChatResponse` | 结束。正文以 `response` 为准；`status=failed` 也在这里返回。 |
+| `error` | `{"status": 409/503/504/500, "detail": "…"}` | 结束。丢弃已显示的正文。 |
+
+```bash
+curl -N http://localhost:8000/chat/stream -H "Content-Type: application/json" \
+  -d '{"message":"退款审核通过后多久到账？","user_id":"demo_user","client_request_id":"demo-stream-001"}'
+```
+
+流式请求的 HTTP 状态在开始时就是 200，处理结果以 `done` 或 `error` 为准；鉴权和参数错误仍使用 401、403、422。没有内容时每 10 秒发送一行注释保持连接。客户端断开后本轮会继续执行并入库，用同一 `client_request_id` 请求任一聊天接口可取回结果，不会重复调用模型。多个 Agent 协作时只流式输出汇总后的回复。`performance.first_token_ms` 是首字耗时，只计最终保留下来的正文。实测 Agent 调用工具之后，模型的回复正文几乎同时到达，这类轮次首字接近总耗时；界面可在收到 `status: tool` 时提示正在查资料。
+
+浏览器的 `EventSource` 不支持 POST，请用 `fetch` 读取：
+
+```js
+const response = await fetch("/chat/stream", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload)});
+const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+let buffer = "", text = "";
+for (let part; !(part = await reader.read()).done;) {
+  buffer += part.value;
+  const blocks = buffer.split("\n\n");
+  buffer = blocks.pop();
+  for (const block of blocks) {
+    const event = /^event: (.+)$/m.exec(block)?.[1];
+    if (!event) continue;                                   // 心跳注释
+    const data = JSON.parse(/^data: (.+)$/m.exec(block)[1]);
+    if (event === "delta") text += data.text;
+    else if (event === "reset" || event === "error") text = "";
+    else if (event === "done") text = data.response;
+    render(text, event, data);                              // 界面更新由前端实现
+  }
+}
+```
+
+### 控制台
+
+启动服务后打开 `http://localhost:8000/console/`：
+
+| 区域 | 内容 |
+|---|---|
+| 对话 | 流式对话，示例问题一键发送；每条回复标出意图、处理的 Agent 和耗时。 |
+| 数据库 | “会话状态”显示本会话在 Redis 的工作记忆、业务字段和摘要，以及 ChromaDB 的用户画像和情景记忆，可按轮次快照查看“本轮变化”；“业务数据”列出知识库文档，并标出本轮检索到的文档。 |
+| 轨迹 | 流程图高亮本轮实际经过的节点（记忆读取、意图识别、路由、知识库预取、各 Agent、汇总、写入）；下方逐步列出模型调用、工具调用、耗时、token 和估算费用。 |
+
+顶部可切换“实时 / 回放”：回放从 Redis 读取 24 小时内保存的会话及其轨迹。页面数据来自只读的 `/admin/*` 接口，启用鉴权时只有管理员 Token 能访问，页面会提示输入 Token（只保存在浏览器本地）。轨迹只记录阶段、模型、耗时、token 和文档标题，不记录对话正文。
+
+### 检索与回复
+
 检索默认只做向量召回，不调用模型；`KORA_RAG_REWRITE` 和 `KORA_RAG_RERANK` 可分别打开查询改写和 LLM 重排。低于 `KORA_KB_MIN_SCORE` 的片段不返回，没有相关资料时返回成功和空结果，由 Agent 如实说明。
 
 检索会缓存完整流程的结果，并合并并发的相同检索。缓存按查询、Top-K、工具版本和传入的用户上下文隔离，沿用工具的 TTL；知识库更新会使线上及评测缓存失效。工具 TTL 为 0 时关闭完整流程缓存和并发合并，失败检索不缓存。`/search` 和知识库工具结果的 `cached` 表示完整流程命中，此时不再请求改写或重排模型。
 
-默认回复提示约 200–400 个中文字符，多角色汇总约 300–500 个字符，保留必要依据、核验条件和下一步；用户明确要求详细说明时允许展开。这是生成时的篇幅指导，不是返回后裁剪，实际达到模型输出上限时仍返回 `partial`。结构化实体优先随角色输入包提供，避免在同一次模型请求中重复发送。
+回复语言跟随用户：中文里夹带英文型号、错误码仍按中文处理，`ok`、订单号这类看不出语言的短消息沿用上一句。默认回复提示约 200–400 个中文字符（英文约 120–220 词），多角色汇总约 300–500 个字符（英文约 180–300 词），保留必要依据、核验条件和下一步；用户明确要求详细说明时允许展开。这是生成时的篇幅指导，不是返回后裁剪，实际达到模型输出上限时仍返回 `partial`。结构化实体优先随角色输入包提供，避免在同一次模型请求中重复发送。
 
 `performance.stages_ms` 是到生成回复为止的阶段耗时，嵌套阶段不可直接相加；`performance.llm.latency_ms` 是各次模型调用耗时之和，并行时可能大于实际墙钟时间。持久化提交在这些阶段之后，完整 HTTP 耗时仍以 `Server-Timing` 为准。幂等回放保留原响应中的统计。`/monitor` 的 `llm_usage.by_stage` 统计本进程各阶段用量，包括后台画像；进程重启后重新累计。调用数按 SDK 逻辑调用计算，不展开 SDK 内部重试；token 字段原样采用供应商统计口径，未报告的调用通过 `usage_reported_calls` 区分，不据此推算账单金额。
 
@@ -575,7 +638,10 @@ python -m evaluation.benchmark retrieval --lang en --compare evaluation/baseline
 # 调用 .env 中的模型，产生费用；先用 --limit 试跑
 python -m evaluation.benchmark intent --mode live --limit 19
 python -m evaluation.benchmark retrieval --mode live --limit 10
-python -m evaluation.benchmark e2e --limit 10
+python -m evaluation.benchmark e2e --limit 10 --stream
+
+# 换辅助模型前先比较意图准确率
+python -m evaluation.benchmark intent --mode live --split dev --model claude-haiku-5-5
 ```
 
 `--compare` 逐用例配对，列出修好和弄坏的用例及 p 值；数据集变化后拒绝比较。报告 `status=partial` 表示包含接口失败、超时或实际响应模型不符，不应作为基线。调优时使用 `--split dev`，最后用 `--split test` 报告结果。检索评测在临时目录建库，不读写真实知识库。
@@ -595,7 +661,7 @@ python -m evaluation.benchmark e2e --limit 10
 
 聊天轨迹脱敏后存入 Redis，保留 7 天，最近列表最多 200 条；专业 Agent 失败回退时保留两次尝试的工具轨迹及回退事件。
 
-`agent_latency_ms` 使用毫秒桶，`chat_latency_ms` 按 HTTP 状态码记录请求总耗时；将 `PROMETHEUS_PORT` 设为 0 可关闭独立指标端口，`/metrics` 仍提供业务指标。
+`agent_latency_ms` 使用毫秒桶，`chat_latency_ms` 按状态码记录请求总耗时（流式请求按本轮处理结果计），`chat_first_token_ms` 记录流式对话的首字耗时；将 `PROMETHEUS_PORT` 设为 0 可关闭独立指标端口，`/metrics` 仍提供业务指标。
 
 <a id="development"></a>
 
@@ -739,6 +805,11 @@ agents/agent_orchestrator.py    Agent 执行、主辅路由和回复合成
 agents/tools.py                Agent 工具封装
 core/intent_recognizer.py      三路意图识别与领域融合
 core/embedding.py              本地多语言向量模型、集合包装与迁移
+core/llm_utils.py              模型调用、流式累积和辅助模型选择
+core/streaming.py              SSE 事件出口
+core/language.py               中英文识别与固定话术
+api/admin.py                   控制台的只读管理接口
+api/console/                   控制台页面（单文件，无外部依赖）
 core/intent_embedding.py       意图向量：在线、本地模型与 n-gram 降级
 core/skill_loader.py           Skills 加载和匹配
 core/access.py                 API 身份与角色校验

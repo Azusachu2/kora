@@ -274,8 +274,8 @@ class MemoryManager:
 
         try:
             resp = await asyncio.wait_for(create_message(self._client,
-                stage="memory.profile",
-                model=self._model, max_tokens=512, temperature=0.0,
+                stage="memory.profile", effort="low",
+                model=self._model, max_tokens=1024, temperature=0.0,
                 messages=[{"role": "user", "content": prompt}],
             ), timeout=15)
             raw = extract_text_content(resp.content)
@@ -310,32 +310,31 @@ class MemoryManager:
 
         query 用于从情景记忆中检索语义相关的历史片段。
         """
-        # 1. 工作记忆（当前会话最近消息）
         user_id = self._safe_text(user_id)
         conv_id = self._safe_text(conv_id)
         query = self._safe_text(query)
 
-        recent = await self._get_working_memory(user_id, conv_id)
+        async def recent_and_history():
+            # 没有指定检索词时，情景检索要用最近一条消息，只能排在工作记忆之后。
+            if query:
+                return await asyncio.gather(self._get_working_memory(user_id, conv_id),
+                                            self._search_episodic(user_id, conv_id, query))
+            recent = await self._get_working_memory(user_id, conv_id)
+            return recent, await self._search_episodic(user_id, conv_id, recent[-1].content if recent else "")
 
-        # 2. 情景记忆（跨会话语义检索）
-        history = await self._search_episodic(
-            user_id,
-            conv_id,
-            query or (recent[-1].content if recent else ""),
+        # 工作记忆 + 情景记忆、用户画像、会话摘要与业务字段互不依赖，一起读取。
+        (recent, history), profile, summary, state_raw = await asyncio.gather(
+            recent_and_history(),
+            self._get_profile(user_id),
+            self._redis.get(self._summary_key(user_id, conv_id)),
+            self._redis.get(self._state_key(user_id, conv_id)),
         )
-
-        # 3. 用户画像
-        profile = await self._get_profile(user_id)
-
-        # 4. 会话摘要（如果已压缩过）
-        summary = await self._redis.get(self._summary_key(user_id, conv_id)) or ""
-        state_raw = await self._redis.get(self._state_key(user_id, conv_id))
 
         return MemoryContext(
             recent_messages=recent,
             relevant_history=history,
             user_profile=profile,
-            summary=summary,
+            summary=summary or "",
             state=json.loads(state_raw) if state_raw else {},
         )
 
@@ -365,7 +364,7 @@ class MemoryManager:
         prompt = self._safe_text(f"用 2-3 句话总结以下对话的关键信息：\n{text}")
         try:
             resp = await create_message(self._client,
-                stage="memory.compress",
+                stage="memory.compress", effort="low",
                 model=self._model, max_tokens=1024, temperature=0.0,
                 messages=[{"role": "user", "content": prompt}],
             )
@@ -587,9 +586,9 @@ class MemoryManager:
         )
         try:
             resp = await create_message(self._client,
-                stage="memory.merge_summary",
+                stage="memory.merge_summary", effort="low",
                 model=self._model,
-                max_tokens=256,
+                max_tokens=1024,
                 temperature=0.0,
                 messages=[{"role": "user", "content": prompt}],
             )

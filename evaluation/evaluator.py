@@ -538,7 +538,10 @@ class EndToEndEvaluator:
                 if case.get("expected_intent"):
                     checks["intent"] = bool(orch_result.intent and orch_result.intent.value == case["expected_intent"])
                 if case.get("required_tools"):
-                    checks["tools"] = set(case["required_tools"]) <= set(getattr(orch_result, "tools_used", []))
+                    used = set(getattr(orch_result, "tools_used", []))
+                    used |= {t["tool_name"] for t in getattr(orch_result, "tool_traces", [])
+                             if t.get("event") == "knowledge_prefetch" and t.get("result_success")}
+                    checks["tools"] = set(case["required_tools"]) <= used
                 if case.get("expected_entities"):
                     checks["entities"] = all(set(values) <= set(orch_req.entities.get(key, []))
                                               for key, values in case["expected_entities"].items())
